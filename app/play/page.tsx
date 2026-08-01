@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import { QUESTIONS, type Question } from "@/lib/questions";
 import { useProgress } from "@/lib/progress";
-import { CONCEPT_BY_ID, PHASES } from "@/lib/curriculum";
+import { CONCEPT_BY_ID, PHASES, type ConceptId } from "@/lib/curriculum";
 import { Swords, Check, X, Timer, Trophy, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -30,7 +30,7 @@ function pickDailyQuestions(unlocked: string[]): Question[] {
   // Group by phase, pick 1 per phase
   const byPhase: Record<number, Question[]> = {};
   for (const q of eligible) {
-    const c = CONCEPT_BY_ID[q.conceptId];
+    const c = CONCEPT_BY_ID[q.conceptId as ConceptId];
     if (!c) continue;
     if (!byPhase[c.phase]) byPhase[c.phase] = [];
     byPhase[c.phase].push(q);
@@ -192,7 +192,7 @@ export default function BattlePage() {
           </div>
         </div>
         <div className="text-[10px] text-faint mb-2">
-          From <span className="text-ink">{CONCEPT_BY_ID[q.conceptId]?.title}</span>
+          From <span className="text-ink">{CONCEPT_BY_ID[q.conceptId as ConceptId]?.title}</span>
         </div>
         <h3 className="font-serif text-xl text-ink mb-5">{q.prompt}</h3>
         <div className="space-y-2">

@@ -244,7 +244,7 @@ function DragHandle({
       onPointerMove={(e) => {
         if (!dragging) return;
         e.stopPropagation();
-        const svg = (e.currentTarget as Element).ownerSVGElement;
+        const svg = (e.currentTarget as unknown as SVGSVGElement);
         if (!svg) return;
         const rect = svg.getBoundingClientRect();
         const vx = ((e.clientX - rect.left) / rect.width) * size;
