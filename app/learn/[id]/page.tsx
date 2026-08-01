@@ -1,6 +1,7 @@
 "use client";
 import { useState, use } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { notFound, useRouter } from "next/navigation";
 import { CONCEPT_BY_ID, type ConceptId } from "@/lib/curriculum";
 import { useProgress, useIsUnlocked } from "@/lib/progress";
@@ -8,6 +9,17 @@ import { QUESTIONS_BY_CONCEPT, type Question } from "@/lib/questions";
 import { Playground } from "@/components/playground/Playground";
 import { Lock, Check, X, ChevronRight, Sparkles, ArrowLeft, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/cn";
+
+const fireConfetti = async () => {
+  if (typeof window === "undefined") return;
+  const mod = await import("canvas-confetti");
+  mod.default({
+    particleCount: 60,
+    spread: 70,
+    origin: { y: 0.6 },
+    colors: ["#e8864a", "#5cb87a", "#6db3ff", "#c98aff", "#ffcc66"],
+  });
+};
 
 export default function ConceptPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -124,6 +136,7 @@ export default function ConceptPage({ params }: { params: Promise<{ id: string }
           onPass={() => {
             complete(concept.id, concept.xp);
             setPuzzleSolved(true);
+            fireConfetti();
           }}
           alreadyDone={isDone}
         />
@@ -367,14 +380,12 @@ function TestTab({
               >
                 Check
               </button>
-              {(wrongAttempts[q.id] || 0) >= 1 && (
-                <button
-                  onClick={() => setShowHint({ ...showHint, [q.id]: true })}
-                  className="text-xs text-warn hover:text-warn/80"
-                >
-                  Show hint
-                </button>
-              )}
+              <button
+                onClick={() => setShowHint({ ...showHint, [q.id]: true })}
+                className="text-xs text-warn hover:text-warn/80"
+              >
+                {showHint[q.id] ? "Hint shown" : "Show hint"}
+              </button>
             </div>
           ) : correctMap[q.id] === false ? (
             <div className="mt-4 space-y-3">

@@ -110,10 +110,12 @@ export const CONCEPTS: ConceptNode[] = [
     title: "Row Operations — Multiply, Swap, Add",
     short: "Three moves that keep the answer the same. The toolkit.",
     story: "You can swap two equations (the answer doesn't care which comes first). You can multiply an equation by any non-zero number. You can add one equation to another. These three moves don't change the answer. They are how you SIMPLIFY until the answer stares at you. This is exactly the Hill cipher but in reverse — you scramble, then unscramble by row operations.",
-    prereqs: ["L4"],
+    prereqs: ["L1"],
     xp: 30,
     playground: "row-ops",
     questions: ["L5-q1", "L5-q2"],
+    whyCare: "The Hill cipher (encrypt text with a 2×2 matrix), Google's PageRank (iterate a matrix to rank pages), and any linear programming solver all rely on row operations under the hood. They're the universal simplification tool.",
+    strang: "Strang §1.3 — the three row operations. The toolkit every numerical method starts from.",
   },
   {
     id: "L6", phase: 1, order: 6,
@@ -168,6 +170,8 @@ export const CONCEPTS: ConceptNode[] = [
     xp: 30,
     playground: "add-scale",
     questions: ["V2-q1", "V2-q2"],
+    whyCare: "Every neural network is built from linear combinations. Each neuron takes a weighted sum of inputs. The 'linear' in 'linear algebra' is the same 'linear' that powers the modern AI revolution.",
+    strang: "Strang §1.2 — linear combinations. The 'recipe' framing: c₁v₁ + c₂v₂ + ... + cₙvₙ.",
   },
   {
     id: "V3", phase: 2, order: 3,
@@ -242,6 +246,8 @@ export const CONCEPTS: ConceptNode[] = [
     xp: 35,
     playground: "transformation",
     questions: ["T1-q1"],
+    whyCare: "Every animation in a Pixar film, every CSS transform on a webpage, every screen rotation on your phone — all are linear transformations applied to the underlying 2D or 3D coordinates. The matrix is the recipe.",
+    strang: "Strang §1.6 — the idea of a linear transformation. His key insight: 'linear' is the only kind of transformation that preserves the straight lines through the origin.",
   },
   {
     id: "T2", phase: 3, order: 2,
@@ -336,6 +342,8 @@ export const CONCEPTS: ConceptNode[] = [
     xp: 60,
     playground: "four-subspaces",
     questions: ["F1-q1", "F1-q2"],
+    whyCare: "The four subspaces are how Strang teaches the whole course — the fundamental theorem. They organize every algorithm: least squares projects onto the column space, the SVD reveals all four at once, and solving Ax=b becomes a coordinate computation in the four subspaces.",
+    strang: "Strang §4.1 — the four fundamental subspaces. He calls this 'the most important picture in all of linear algebra'.",
   },
   {
     id: "F2", phase: 4, order: 2,
@@ -432,6 +440,8 @@ export const CONCEPTS: ConceptNode[] = [
     xp: 55,
     playground: "eigenvalue",
     questions: ["E2-q1", "E2-q2"],
+    whyCare: "Eigenvalues tell you the natural frequencies of a system. A vibrating bridge, a resonating circuit, a swinging pendulum — all are governed by the eigenvalues of the relevant matrix. They're what the world 'wants to do' on its own.",
+    strang: "Strang §6.1 — the eigenvalue itself. He emphasizes the sign and magnitude: positive, negative, zero, complex. Each tells a different story about the transformation.",
   },
   {
     id: "E3", phase: 5, order: 3,
@@ -442,6 +452,8 @@ export const CONCEPTS: ConceptNode[] = [
     xp: 65,
     playground: "characteristic",
     questions: ["E3-q1"],
+    whyCare: "The characteristic polynomial det(A - λI) is the master equation. Quantum mechanics lives here — the energy levels of an atom are the eigenvalues of the Hamiltonian. Google's PageRank solves the dominant eigenvector of the link graph.",
+    strang: "Strang §6.2 — the characteristic equation. He calls it 'the most important equation in linear algebra applied to differential equations'.",
   },
   {
     id: "E4", phase: 5, order: 4,
@@ -452,6 +464,8 @@ export const CONCEPTS: ConceptNode[] = [
     xp: 70,
     playground: "diagonalize",
     questions: ["E4-q1", "E4-q2"],
+    whyCare: "Diagonalization is what lets you compute A^1000000 instantly (raise the diagonal entries to the 1000000th power). Markov chains converge because the dominant eigenvalue is 1. Quantum mechanics is built on diagonalization of Hermitian matrices.",
+    strang: "Strang §6.3 — diagonalization. He shows the 3-step ritual: snap to the eigenbasis, scale, snap back. A = XΛX⁻¹.",
   },
   {
     id: "E5", phase: 5, order: 5,
@@ -460,8 +474,10 @@ export const CONCEPTS: ConceptNode[] = [
     story: "Take the characteristic polynomial p(λ) of A. Plug A into it. The result is the ZERO matrix. Every matrix satisfies its own characteristic equation. This is one of the most beautiful theorems in linear algebra — and it's used to compute matrix powers, inverses, and exponentials.",
     prereqs: ["E4"],
     xp: 70,
-    playground: "diagonalize",
+    playground: "characteristic",
     questions: ["E5-q1"],
+    whyCare: "The Cayley-Hamilton theorem is how you compute matrix powers, inverses, and exponentials efficiently. The matrix exponential exp(At) is the foundation of every linear differential equation — the model of any system that evolves linearly in time (circuits, populations, mechanics).",
+    strang: "Strang §6.4 — the Cayley-Hamilton theorem. He calls it 'the most remarkable theorem in linear algebra' — that a matrix satisfies its own characteristic polynomial.",
   },
   {
     id: "E6", phase: 5, order: 6,
@@ -486,6 +502,8 @@ export const CONCEPTS: ConceptNode[] = [
     xp: 80,
     playground: "svd-animate",
     questions: ["S1-q1", "S1-q2"],
+    whyCare: "Every recommendation system (Netflix, Spotify, YouTube), every image compressor (JPEG, PNG), every dimensionality reduction (PCA), every recommender — they all start with SVD. Google ranks web pages by computing the dominant singular vectors of the link graph.",
+    strang: "Strang §7.1 — the singular value decomposition. His clearest statement: 'Every matrix is a rotation, a scaling, a rotation.' He calls SVD 'the most important theorem in linear algebra'.",
   },
   {
     id: "S2", phase: 6, order: 2,
@@ -520,6 +538,8 @@ export const CONCEPTS: ConceptNode[] = [
     xp: 80,
     playground: "least-squares",
     questions: ["S4-q1", "S4-q2"],
+    whyCare: "Every curve fit in science, every regression in economics, every calibration in engineering — they all solve least squares. GPS trilateration is least squares. The lines of best fit through your lab data are least squares. The pseudoinverse x = (AᵀA)⁻¹Aᵀb is the formula.",
+    strang: "Strang §4.3 — least squares. He shows the geometric meaning: project b onto the column space of A. The error is perpendicular to the column space — that's the whole proof.",
   },
   {
     id: "S5", phase: 6, order: 5,
