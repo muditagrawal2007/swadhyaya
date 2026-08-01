@@ -336,10 +336,10 @@ const PHASE_NAMES: Record<number, string> = {
 };
 
 const PHASE_COLORS: Record<number, string> = {
-  1: "#ff4d6d",
-  2: "#4d9bff",
-  3: "#00ffa3",
-  4: "#b96bff",
-  5: "#ffd24d",
-  6: "#ff9a3c",
+  1: "#e8864a",  // orange — same as accent, the "concrete" phase
+  2: "#d4a574",  // tan — the "earn the abstraction" phase
+  3: "#5cb87a",  // green — linear (preserves structure)
+  4: "#c98aff",  // purple — dual / functionals
+  5: "#ffcc66",  // gold — eigen (the "magic number")
+  6: "#ff8a65",  // coral — applications / payoff
 };

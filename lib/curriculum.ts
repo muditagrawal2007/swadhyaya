@@ -47,12 +47,12 @@ export const PHASES: Array<{
   subtitle: string;
   color: string;
 }> = [
-  { id: 1, title: "Systems of Linear Equations", subtitle: "Where the world starts", color: "#ff4d6d" },
-  { id: 2, title: "Vector Spaces",                 subtitle: "The abstraction, now earned",   color: "#4d9bff" },
-  { id: 3, title: "Linear Transformations",        subtitle: "Functions that preserve structure", color: "#00ffa3" },
-  { id: 4, title: "Four Subspaces & Dual Space",   subtitle: "The deep structure",            color: "#b96bff" },
-  { id: 5, title: "Eigenvalues & Eigenvectors",    subtitle: "What survives the transformation", color: "#ffd24d" },
-  { id: 6, title: "SVD & Applications",            subtitle: "The payoff — real world",        color: "#ff9a3c" },
+  { id: 1, title: "Systems of Linear Equations", subtitle: "Where the world starts", color: "#e8864a" },
+  { id: 2, title: "Vector Spaces",                 subtitle: "The abstraction, now earned",   color: "#d4a574" },
+  { id: 3, title: "Linear Transformations",        subtitle: "Functions that preserve structure", color: "#5cb87a" },
+  { id: 4, title: "Four Subspaces & Dual Space",   subtitle: "The deep structure",            color: "#c98aff" },
+  { id: 5, title: "Eigenvalues & Eigenvectors",    subtitle: "What survives the transformation", color: "#ffcc66" },
+  { id: 6, title: "SVD & Applications",            subtitle: "The payoff — real world",        color: "#ff8a65" },
 ];
 
 export const CONCEPTS: ConceptNode[] = [

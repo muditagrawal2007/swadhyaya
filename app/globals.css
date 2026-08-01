@@ -2,23 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Swadhyaya theme — Tenali-aligned warm dark.
+   Source: https://github.com/vicharanashala/tenali/blob/main/client/src/App.css
+   - Warm dark brown canvas (not pure black)
+   - Warm orange accent (not lime)
+   - Source Serif 4 for display, DM Sans for body
+*/
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap');
+
 @layer base {
   :root {
-    --bg: #0a0a0f;
-    --bg-elev: #13131a;
-    --bg-card: #1a1a23;
-    --ink: #f5f5f7;
-    --ink-dim: #8a8a96;
-    --ink-faint: #4a4a55;
-    --line: #2a2a35;
-    --accent: #c8ff00;
-    --accent-2: #00d4ff;
-    --vector: #ff4d6d;
-    --matrix: #4d9bff;
-    --transform: #00ffa3;
-    --eigen: #b96bff;
-    --singular: #ffd24d;
-    --warn: #ff9a3c;
+    /* Background scale — warm dark brown (Tenali) */
+    --bg: #1a1614;           /* main page background */
+    --bg-elev: #2c2622;      /* cards, nav */
+    --bg-card: #362f2a;      /* surface panels (slightly elevated) */
+    --bg-input: #3e3631;     /* inputs / hover surfaces */
+
+    /* Text scale */
+    --ink: #ede8e3;          /* primary text — warm off-white */
+    --ink-dim: #a89e94;      /* secondary text — muted brown-gray */
+    --ink-faint: #6b6058;    /* tertiary / placeholders */
+
+    /* Borders & dividers */
+    --line: rgba(255, 245, 230, 0.18);
+
+    /* Accent — warm orange (Tenali) */
+    --accent: #e8864a;
+    --accent-2: #d97a3a;     /* darker for hover */
+    --accent-soft: rgba(232, 134, 74, 0.22);
+
+    /* Feedback states */
+    --correct: #5cb87a;
+    --correct-bg: rgba(92, 184, 122, 0.12);
+    --wrong: #e05a4a;
+    --wrong-bg: rgba(224, 90, 74, 0.12);
+
+    /* Semantic math colors — preserved from prior version
+       (red vector, blue matrix, green transform, purple eigen, gold singular)
+       These are pedagogical, not aesthetic — keep them distinct */
+    --vector: #ff6b7d;       /* softened red to harmonize with warm bg */
+    --matrix: #6db3ff;       /* softened blue */
+    --transform: #4dd9a8;    /* softened green */
+    --eigen: #c98aff;        /* softened purple */
+    --singular: #ffcc66;     /* softened gold */
+    --warn: #f0a050;         /* warm amber */
+
+    /* Sizing (Tenali) */
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.15);
+    --shadow-btn: 0 2px 8px rgba(0, 0, 0, 0.20);
+    --transition: 180ms ease;
   }
 }
 
@@ -30,12 +64,16 @@
     text-rendering: optimizeLegibility;
   }
   body {
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
     font-feature-settings: "ss01", "cv11";
   }
   ::selection {
     background: var(--accent);
     color: var(--bg);
+  }
+  h1, h2, h3, .font-serif {
+    font-family: 'Source Serif 4', Georgia, serif;
+    letter-spacing: -0.01em;
   }
 }
 
@@ -48,19 +86,32 @@
   .text-transform { color: var(--transform); }
   .text-eigen { color: var(--eigen); }
   .text-singular { color: var(--singular); }
+  .text-accent { color: var(--accent); }
+  .text-correct { color: var(--correct); }
+  .text-warn { color: var(--warn); }
   .bg-canvas { background: var(--bg); }
   .bg-elev { background: var(--bg-elev); }
   .bg-card { background: var(--bg-card); }
+  .bg-input { background: var(--bg-input); }
+  .bg-accent { background: var(--accent); }
+  .bg-accent-soft { background: var(--accent-soft); }
   .border-line { border-color: var(--line); }
-  .font-serif { font-family: ui-serif, Georgia, "Times New Roman", serif; }
+  .border-accent { border-color: var(--accent); }
+  .font-serif { font-family: 'Source Serif 4', Georgia, serif; }
   .font-mono { font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace; }
   .grid-bg {
     background-image:
-      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      linear-gradient(rgba(255, 245, 230, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 245, 230, 0.025) 1px, transparent 1px);
     background-size: 32px 32px;
   }
   .glow-accent {
     box-shadow: 0 0 0 1px var(--accent), 0 0 24px -4px var(--accent);
+  }
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  .shadow-btn {
+    box-shadow: var(--shadow-btn);
   }
 }
