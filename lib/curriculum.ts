@@ -34,13 +34,13 @@ export interface ConceptNode {
 }
 
 export type PlaygroundId =
-  | "lines-2d" | "intersect" | "row-ops" | "gaussian" | "rref" | "homogeneous"
-  | "vector-arrow" | "add-scale"
-  | "span" | "independence" | "basis" | "dimension"
+  | "lines-2d" | "intersect" | "planes-3d" | "row-ops" | "gaussian" | "rref" | "homogeneous"
+  | "vector-arrow" | "add-scale" | "linear-combination"
+  | "span" | "subspace" | "independence" | "basis" | "dimension"
   | "transformation" | "linear-matters" | "transform-3d" | "matrix-cols" | "matrix-times-vec" | "matrix-times-mat"
   | "big-four" | "determinant" | "inverse" | "rank" | "null-range" | "rank-nullity" | "isomorphism"
   | "four-subspaces" | "row-col" | "functional" | "dual" | "dual-basis" | "annihilator" | "transpose" | "double-dual"
-  | "eigen-discover" | "eigen-discover-v2" | "eigenvalue" | "characteristic" | "diagonalize"
+  | "eigen-discover" | "eigen-discover-v2" | "eigenvalue" | "characteristic" | "characteristic-2" | "cayley-hamilton" | "minimal-poly" | "diagonalize"
   | "svd-animate" | "svd-image" | "pca" | "least-squares";
 
 export type QuestionId = string;
@@ -82,7 +82,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "Atul's house is at the origin. He walks 2 units east, then 1 unit north, to reach Bala's house. Then he turns right (east) for 1 unit, then left (north) for 1 unit, reaching Chetan. Right 1, left 1, reaching Divya. Are Bala, Chetan, Divya on a straight line? The line y = x + 0. They are. This is one equation with one story.",
     prereqs: ["L1"],
     xp: 15,
-    playground: "intersect",
+    playground: "lines-2d",
     questions: ["L2-q1", "L2-q2"],
   },
   {
@@ -92,7 +92,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "Three equations, three unknowns. Imagine three flat sheets of glass floating in 3D space. They might meet at one point (the answer), or two might be parallel (no answer), or all three might be the same sheet (infinite answers). You cannot see them meet in your head, so the matrix form gives you a way to find out.",
     prereqs: ["L2"],
     xp: 20,
-    playground: "intersect",
+    playground: "planes-3d",
     questions: ["L3-q1"],
   },
   {
@@ -168,7 +168,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "Adding two vectors: walk along the first arrow, then walk along the second. The end is the sum. Scaling: multiply by a number. 2 times the arrow = twice as long. -1 times the arrow = flipped. A linear combination is just adding scaled arrows. The recipe: 3 of this, -2 of that, 5 of the other. The result is a new arrow.",
     prereqs: ["V1"],
     xp: 30,
-    playground: "add-scale",
+    playground: "linear-combination",
     questions: ["V2-q1", "V2-q2"],
     whyCare: "Every neural network is built from linear combinations. Each neuron takes a weighted sum of inputs. The 'linear' in 'linear algebra' is the same 'linear' that powers the modern AI revolution.",
     strang: "Strang §1.2 — linear combinations. The 'recipe' framing: c₁v₁ + c₂v₂ + ... + cₙvₙ.",
@@ -190,7 +190,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "A subspace is a piece of the vector space that contains the origin, and stays inside itself when you add or scale. Three examples: the whole space. A line through the origin. The origin itself (the zero-dimensional subspace). Two non-examples: a line NOT through the origin. A hollow circle. Neither stays inside itself when you scale.",
     prereqs: ["V3"],
     xp: 35,
-    playground: "span",
+    playground: "subspace",
     questions: ["V4-q1", "V4-q2"],
   },
   {
@@ -450,7 +450,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "We want vectors v ≠ 0 with Av = λv, or (A - λI)v = 0. For non-zero v to exist, A - λI must be singular — its determinant must be 0. The polynomial det(A - λI) is the characteristic polynomial. Its roots are the eigenvalues. The degree of this polynomial is n, so there are (counting multiplicities) n eigenvalues.",
     prereqs: ["E2"],
     xp: 65,
-    playground: "characteristic",
+    playground: "characteristic-2",
     questions: ["E3-q1"],
     whyCare: "The characteristic polynomial det(A - λI) is the master equation. Quantum mechanics lives here — the energy levels of an atom are the eigenvalues of the Hamiltonian. Google's PageRank solves the dominant eigenvector of the link graph.",
     strang: "Strang §6.2 — the characteristic equation. He calls it 'the most important equation in linear algebra applied to differential equations'.",
@@ -474,7 +474,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "Take the characteristic polynomial p(λ) of A. Plug A into it. The result is the ZERO matrix. Every matrix satisfies its own characteristic equation. This is one of the most beautiful theorems in linear algebra — and it's used to compute matrix powers, inverses, and exponentials.",
     prereqs: ["E4"],
     xp: 70,
-    playground: "characteristic",
+    playground: "cayley-hamilton",
     questions: ["E5-q1"],
     whyCare: "The Cayley-Hamilton theorem is how you compute matrix powers, inverses, and exponentials efficiently. The matrix exponential exp(At) is the foundation of every linear differential equation — the model of any system that evolves linearly in time (circuits, populations, mechanics).",
     strang: "Strang §6.4 — the Cayley-Hamilton theorem. He calls it 'the most remarkable theorem in linear algebra' — that a matrix satisfies its own characteristic polynomial.",
@@ -486,7 +486,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "The Cayley-Hamilton polynomial is not always the simplest. The minimal polynomial is the polynomial m(λ) of smallest degree such that m(A) = 0. It always divides the characteristic polynomial. It tells you the smallest invariant subspace decomposition. Diagonalizable = minimal polynomial has no repeated roots.",
     prereqs: ["E5"],
     xp: 70,
-    playground: "characteristic",
+    playground: "minimal-poly",
     questions: ["E6-q1"],
   },
 

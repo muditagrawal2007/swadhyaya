@@ -5,10 +5,15 @@ import { LinePlayground } from "./LinePlayground";
 import { RREFPlayground } from "./RREFPlayground";
 import { VectorArrowPlayground } from "./VectorArrowPlayground";
 import { AddScalePlayground } from "./AddScalePlayground";
+import { LinearCombinationPlayground } from "./LinearCombinationPlayground";
 import { SpanPlayground } from "./SpanPlayground";
+import { SubspacePlayground } from "./SubspacePlayground";
 import { IndependencePlayground } from "./IndependencePlayground";
 import { EigenPlayground } from "./EigenPlayground";
 import { EigenDiscoverPlayground } from "./EigenDiscoverPlayground";
+import { CharacteristicPlayground2 } from "./CharacteristicPlayground2";
+import { CayleyHamiltonPlayground } from "./CayleyHamiltonPlayground";
+import { MinimalPolynomialPlayground } from "./MinimalPolynomialPlayground";
 import { SVDPlayground } from "./SVDPlayground";
 import { SVDImagePlayground } from "./SVDImagePlayground";
 import { PCAPlayground } from "./PCAPlayground";
@@ -24,6 +29,7 @@ import { DimensionPlayground } from "./DimensionPlayground";
 import { TransformationPlayground } from "./TransformationPlayground";
 import { LinearMattersPlayground } from "./LinearMattersPlayground";
 const Transform3DPlayground = dynamic(() => import("./Transform3DPlayground").then(m => m.Transform3DPlayground), { ssr: false, loading: () => <div className="bg-card border border-line rounded-xl p-8 text-center text-dim">Loading 3D...</div> });
+const Planes3DPlayground = dynamic(() => import("./Planes3DPlayground").then(m => m.Planes3DPlayground), { ssr: false, loading: () => <div className="bg-card border border-line rounded-xl p-8 text-center text-dim">Loading 3D...</div> });
 import { NullRangePlayground2 } from "./NullRangePlayground2";
 import { RankNullityPlayground } from "./RankNullityPlayground";
 import { IsomorphismPlayground } from "./IsomorphismPlayground";
@@ -44,6 +50,8 @@ export function Playground({ id }: { id: PlaygroundId }) {
       return <LinePlayground />;
     case "intersect":
       return <IntersectPlayground />;
+    case "planes-3d":
+      return <Planes3DPlayground />;
     case "matrix-times-vec":
       return <LinePlayground />; // legacy alias
     case "row-ops":
@@ -60,8 +68,12 @@ export function Playground({ id }: { id: PlaygroundId }) {
       return <VectorArrowPlayground />;
     case "add-scale":
       return <AddScalePlayground />;
+    case "linear-combination":
+      return <LinearCombinationPlayground />;
     case "span":
       return <SpanPlayground />;
+    case "subspace":
+      return <SubspacePlayground />;
     case "independence":
       return <IndependencePlayground2 />;
     case "basis":
@@ -79,7 +91,7 @@ export function Playground({ id }: { id: PlaygroundId }) {
     case "matrix-cols":
       return <MatrixColumnsPlayground />;
     case "matrix-times-mat":
-      return <MatrixColumnsPlayground />; // reuse, shows multiplication in story
+      return <MatrixColumnsPlayground />; // legacy alias for T7 (composition)
     case "null-range":
       return <NullRangePlayground2 />;
     case "rank-nullity":
@@ -87,7 +99,7 @@ export function Playground({ id }: { id: PlaygroundId }) {
     case "isomorphism":
       return <IsomorphismPlayground />;
     case "big-four":
-      return <MatrixColumnsPlayground />; // legacy
+      return <MatrixColumnsPlayground />; // legacy alias
     case "determinant":
       return <MatrixColumnsPlayground />; // legacy
     case "inverse":
@@ -119,7 +131,15 @@ export function Playground({ id }: { id: PlaygroundId }) {
     case "eigen-discover-v2":
       return <EigenDiscoverPlayground />;
     case "eigenvalue":
+      return <EigenPlayground />;
     case "characteristic":
+      return <EigenPlayground />;
+    case "characteristic-2":
+      return <CharacteristicPlayground2 />;
+    case "cayley-hamilton":
+      return <CayleyHamiltonPlayground />;
+    case "minimal-poly":
+      return <MinimalPolynomialPlayground />;
     case "diagonalize":
       return <EigenPlayground />;
 
