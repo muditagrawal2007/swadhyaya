@@ -1,8 +1,9 @@
 "use client";
 import Link from "next/link";
-import { Flame, Trophy, Layers, Menu } from "lucide-react";
+import { Flame, Layers, Menu } from "lucide-react";
 import { useProgress, levelFromXP, xpForLevel, xpForNextLevel } from "@/lib/progress";
 import { useState } from "react";
+import { AuthButton } from "./AuthButton";
 
 export function TopNav() {
   const xp = useProgress((s) => s.xp);
@@ -52,13 +53,7 @@ export function TopNav() {
             <span className="font-mono text-ink">{streak}</span>
           </div>
 
-          <Link
-            href="/play"
-            className="hidden sm:flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-md bg-accent/10 text-accent hover:bg-accent/20 transition border border-accent/20"
-          >
-            <Trophy size={14} />
-            <span>Battle</span>
-          </Link>
+          <AuthButton />
         </div>
       </div>
     </header>

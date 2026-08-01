@@ -10,10 +10,8 @@ interface ProgressState {
   streak: number;
   lastVisit: string; // ISO date
   lensModes: string[];
-  battleHistory: Array<{ date: string; score: number; rank: string }>;
   // actions
   complete: (id: ConceptId, xp: number) => void;
-  recordBattle: (score: number, rank: string) => void;
   unlockLens: (lens: string) => void;
   reset: () => void;
 }
@@ -60,7 +58,6 @@ export const useProgress = create<ProgressState>()(
       streak: 1,
       lastVisit: today(),
       lensModes: [],
-      battleHistory: [],
       complete: (id, xp) => {
         const completed = get().completed.includes(id)
           ? get().completed
@@ -76,14 +73,6 @@ export const useProgress = create<ProgressState>()(
           lensModes: lensUnlockedAt(lvl),
         });
       },
-      recordBattle: (score, rank) => {
-        set({
-          battleHistory: [
-            ...get().battleHistory,
-            { date: today(), score, rank },
-          ].slice(-50),
-        });
-      },
       unlockLens: (lens) => {
         if (!get().lensModes.includes(lens)) {
           set({ lensModes: [...get().lensModes, lens] });
@@ -96,7 +85,6 @@ export const useProgress = create<ProgressState>()(
           streak: 1,
           lastVisit: today(),
           lensModes: [],
-          battleHistory: [],
         }),
     }),
     {

@@ -11,16 +11,48 @@ import { SVDPlayground } from "./SVDPlayground";
 import { SVDImagePlayground } from "./SVDImagePlayground";
 import { PCAPlayground } from "./PCAPlayground";
 import { LeastSquaresPlayground } from "./LeastSquaresPlayground";
+import { IntersectPlayground } from "./IntersectPlayground";
+import { RowOpsPlayground } from "./RowOpsPlayground";
+import { GaussianPlayground } from "./GaussianPlayground";
+import { RREFPlayground2 } from "./RREFPlayground2";
+import { HomogeneousPlayground } from "./HomogeneousPlayground";
+import { IndependencePlayground2 } from "./IndependencePlayground2";
+import { BasisPlayground } from "./BasisPlayground";
+import { DimensionPlayground } from "./DimensionPlayground";
+import { TransformationPlayground } from "./TransformationPlayground";
+import { LinearMattersPlayground } from "./LinearMattersPlayground";
+import { NullRangePlayground2 } from "./NullRangePlayground2";
+import { RankNullityPlayground } from "./RankNullityPlayground";
+import { IsomorphismPlayground } from "./IsomorphismPlayground";
+import { FourSubspacesPlayground } from "./FourSubspacesPlayground";
+import { RowColPlayground } from "./RowColPlayground";
+import { FunctionalPlayground } from "./FunctionalPlayground";
+import { DualSpacePlayground } from "./DualSpacePlayground";
+import { DualBasisPlayground } from "./DualBasisPlayground";
+import { AnnihilatorPlayground } from "./AnnihilatorPlayground";
+import { TransposePlayground } from "./TransposePlayground";
+import { DoubleDualPlayground } from "./DoubleDualPlayground";
 import type { PlaygroundId } from "@/lib/curriculum";
-import { m2 } from "@/lib/math";
 
 export function Playground({ id }: { id: PlaygroundId }) {
   switch (id) {
+    // Phase 1 — Systems of Linear Equations
     case "lines-2d":
-    case "intersect":
       return <LinePlayground />;
+    case "intersect":
+      return <IntersectPlayground />;
+    case "matrix-times-vec":
+      return <LinePlayground />; // legacy alias
+    case "row-ops":
+      return <RowOpsPlayground />;
+    case "gaussian":
+      return <GaussianPlayground />;
     case "rref":
-      return <RREFPlayground />;
+      return <RREFPlayground2 />;
+    case "homogeneous":
+      return <HomogeneousPlayground />;
+
+    // Phase 2 — Vector Spaces
     case "vector-arrow":
       return <VectorArrowPlayground />;
     case "add-scale":
@@ -28,27 +60,62 @@ export function Playground({ id }: { id: PlaygroundId }) {
     case "span":
       return <SpanPlayground />;
     case "independence":
-      return <IndependencePlayground />;
+      return <IndependencePlayground2 />;
+    case "basis":
+      return <BasisPlayground />;
+    case "dimension":
+      return <DimensionPlayground />;
+
+    // Phase 3 — Linear Transformations
+    case "transformation":
+      return <TransformationPlayground />;
+    case "linear-matters":
+      return <LinearMattersPlayground />;
     case "matrix-cols":
-    case "matrix-times-vec":
-    case "matrix-times-mat":
-    case "big-four":
-    case "determinant":
-    case "inverse":
-    case "rank":
-    case "null-range":
       return <MatrixColumnsPlayground />;
+    case "matrix-times-mat":
+      return <MatrixColumnsPlayground />; // reuse, shows multiplication in story
+    case "null-range":
+      return <NullRangePlayground2 />;
+    case "rank-nullity":
+      return <RankNullityPlayground />;
+    case "isomorphism":
+      return <IsomorphismPlayground />;
+    case "big-four":
+      return <MatrixColumnsPlayground />; // legacy
+    case "determinant":
+      return <MatrixColumnsPlayground />; // legacy
+    case "inverse":
+      return <MatrixColumnsPlayground />; // legacy
+    case "rank":
+      return <MatrixColumnsPlayground />; // legacy
+
+    // Phase 4 — Four Subspaces & Dual
     case "four-subspaces":
       return <FourSubspacesPlayground />;
+    case "row-col":
+      return <RowColPlayground />;
+    case "functional":
+      return <FunctionalPlayground />;
     case "dual":
+      return <DualSpacePlayground />;
+    case "dual-basis":
+      return <DualBasisPlayground />;
     case "annihilator":
+      return <AnnihilatorPlayground />;
     case "transpose":
-      return <DualPlayground />;
+      return <TransposePlayground />;
+    case "double-dual":
+      return <DoubleDualPlayground />;
+
+    // Phase 5 — Eigenvalues
     case "eigen-discover":
     case "eigenvalue":
     case "characteristic":
     case "diagonalize":
       return <EigenPlayground />;
+
+    // Phase 6 — SVD & Applications
     case "svd-animate":
       return <SVDPlayground />;
     case "svd-image":
@@ -57,40 +124,12 @@ export function Playground({ id }: { id: PlaygroundId }) {
       return <PCAPlayground />;
     case "least-squares":
       return <LeastSquaresPlayground />;
+
     default:
       return (
         <div className="bg-card border border-line rounded-xl p-8 text-center text-dim">
-          Playground coming soon for: {id}
+          Playground for <code className="text-accent">{id}</code> is being built.
         </div>
       );
   }
-}
-
-function FourSubspacesPlayground() {
-  return (
-    <div className="bg-card border border-line rounded-xl p-6">
-      <h3 className="text-sm font-medium text-ink mb-2">The four fundamental subspaces</h3>
-      <p className="text-xs text-dim mb-4">
-        For any matrix A, there are four subspaces — in two pairs of annihilators.
-        This playground is being polished. For now, the matrix-columns playground above
-        shows the action of A; the null space is what collapses to zero, the column
-        space is what&apos;s reachable.
-      </p>
-    </div>
-  );
-}
-
-function DualPlayground() {
-  return (
-    <div className="bg-card border border-line rounded-xl p-6">
-      <h3 className="text-sm font-medium text-ink mb-2">Linear functionals & dual space</h3>
-      <p className="text-xs text-dim">
-        A linear functional is a linear map f: V → ℝ. The dot product is the classic
-        example: f(v) = v · w for some fixed w. The set of ALL such functionals is
-        the dual space V*. It has the same dimension as V but is a different kind of
-        object — functionals, not vectors. See the matrix playground for the transpose
-        of a transformation, which is the map on functionals.
-      </p>
-    </div>
-  );
 }

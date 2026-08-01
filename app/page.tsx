@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles, Map, Swords, Layers } from "lucide-react";
+import { ArrowRight, Sparkles, Map, Trophy, Layers } from "lucide-react";
 import { CONCEPTS, PHASES } from "@/lib/curriculum";
 
 export default function HomePage() {
@@ -37,11 +37,11 @@ export default function HomePage() {
             <ArrowRight size={16} className="group-hover:translate-x-0.5 transition" />
           </Link>
           <Link
-            href="/play"
+            href="/leaderboard"
             className="inline-flex items-center gap-2 px-5 py-3 rounded-md border border-line text-ink hover:bg-elev transition"
           >
-            <Swords size={16} />
-            <span>Today's battle</span>
+            <Trophy size={16} />
+            <span>Your progress</span>
           </Link>
         </div>
 
@@ -52,7 +52,7 @@ export default function HomePage() {
           <span>·</span>
           <span>Story-first, no jargon</span>
           <span>·</span>
-          <span>Beat others in daily battles</span>
+          <span>Track your progress</span>
         </div>
       </section>
 
@@ -69,9 +69,9 @@ export default function HomePage() {
             body="Every concept is a story. Every formula is a label the student earns by playing. No flashcards. No proofs before pictures."
           />
           <Feature
-            icon={<Swords size={18} />}
-            title="Compete"
-            body="Daily boss battles. Same five questions for everyone, ranked by speed and accuracy. Climb the leaderboard."
+            icon={<Trophy size={18} />}
+            title="Track your growth"
+            body="Every concept you lock in adds XP, levels you up, and feeds your streak. Your full progress is one glance away on the leaderboard."
           />
         </div>
       </section>

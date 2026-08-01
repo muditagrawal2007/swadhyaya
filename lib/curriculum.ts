@@ -32,10 +32,12 @@ export interface ConceptNode {
 }
 
 export type PlaygroundId =
-  | "lines-2d" | "intersect" | "rref" | "vector-arrow" | "add-scale"
-  | "span" | "independence" | "matrix-cols" | "matrix-times-vec" | "matrix-times-mat"
-  | "big-four" | "determinant" | "inverse" | "rank" | "null-range"
-  | "four-subspaces" | "dual" | "annihilator" | "transpose"
+  | "lines-2d" | "intersect" | "row-ops" | "gaussian" | "rref" | "homogeneous"
+  | "vector-arrow" | "add-scale"
+  | "span" | "independence" | "basis" | "dimension"
+  | "transformation" | "linear-matters" | "matrix-cols" | "matrix-times-vec" | "matrix-times-mat"
+  | "big-four" | "determinant" | "inverse" | "rank" | "null-range" | "rank-nullity" | "isomorphism"
+  | "four-subspaces" | "row-col" | "functional" | "dual" | "dual-basis" | "annihilator" | "transpose" | "double-dual"
   | "eigen-discover" | "eigenvalue" | "characteristic" | "diagonalize"
   | "svd-animate" | "svd-image" | "pca" | "least-squares";
 
@@ -106,7 +108,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "You can swap two equations (the answer doesn't care which comes first). You can multiply an equation by any non-zero number. You can add one equation to another. These three moves don't change the answer. They are how you SIMPLIFY until the answer stares at you. This is exactly the Hill cipher but in reverse — you scramble, then unscramble by row operations.",
     prereqs: ["L4"],
     xp: 30,
-    playground: "rref",
+    playground: "row-ops",
     questions: ["L5-q1", "L5-q2"],
   },
   {
@@ -116,7 +118,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "Take a system. Use row operations to make all the entries below the main diagonal zero. Now the system is in a stair-step shape. Read from the bottom row up — the last equation gives you one variable, plug into the one above, get the next, and so on. This is the systematic way Sudarshan teaches: elimination, then back-substitution.",
     prereqs: ["L5"],
     xp: 35,
-    playground: "rref",
+    playground: "gaussian",
     questions: ["L6-q1", "L6-q2"],
   },
   {
@@ -136,7 +138,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "A homogeneous system is Ax = 0. It always has at least the trivial answer x = 0. The question is: are there OTHER answers? If A is full-rank, no. If A collapses a dimension, yes — an entire line of answers. A non-homogeneous system is Ax = b with b ≠ 0. It might have no answer (b is outside what A can produce), exactly one (unique), or infinitely many (if A has a null space).",
     prereqs: ["L7"],
     xp: 45,
-    playground: "rref",
+    playground: "homogeneous",
     questions: ["L8-q1", "L8-q2"],
   },
 
@@ -210,7 +212,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "A basis is a set of arrows that is BOTH independent AND spans the whole space. In 2D: two non-parallel arrows. In 3D: three arrows, not all in the same plane. A basis is a coordinate system — every point in the space is a UNIQUE recipe of the basis arrows. The same point written in a different basis looks like a different recipe.",
     prereqs: ["V6"],
     xp: 50,
-    playground: "independence",
+    playground: "basis",
     questions: ["V7-q1"],
   },
   {
@@ -220,7 +222,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "Every basis of a vector space has the SAME number of vectors. This is the dimension. The number of coordinates you need to describe a point. The plane is 2D. Space is 3D. The line is 1D. The origin is 0D. Dimension is the most important invariant in linear algebra — it is what rank, nullity, and the rank-nullity theorem measure.",
     prereqs: ["V7"],
     xp: 55,
-    playground: "independence",
+    playground: "dimension",
     questions: ["V8-q1", "V8-q2"],
   },
 
@@ -234,7 +236,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "Take every point in the plane and move it somewhere. That is a transformation. Some transformations are simple (rotate by 90°). Some are wild (push the plane into a Möbius strip). Linear algebra studies the WELL-BEHAVED ones — the ones that preserve the grid structure.",
     prereqs: ["V8"],
     xp: 35,
-    playground: "matrix-cols",
+    playground: "transformation",
     questions: ["T1-q1"],
   },
   {
@@ -244,7 +246,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "A transformation T is linear if T(v + w) = T(v) + T(w) and T(cv) = cT(v). What does that mean visually? If you take the grid, the grid is preserved — every grid line goes to a (possibly different) grid line. Parallel lines stay parallel. The origin stays fixed. Everything else is non-linear.",
     prereqs: ["T1"],
     xp: 40,
-    playground: "matrix-cols",
+    playground: "linear-matters",
     questions: ["T2-q1", "T2-q2"],
   },
   {
@@ -274,7 +276,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "This equation is the heartbeat of linear algebra. The dimension of what gets squashed plus the dimension of what survives equals the dimension of the space you started with. If you go from R⁴ to R⁴ and the null space is 1D, the range is 3D. If the null is 2D, the range is 2D. The transformation can ONLY destroy dimensions; it cannot create them.",
     prereqs: ["T4"],
     xp: 60,
-    playground: "null-range",
+    playground: "rank-nullity",
     questions: ["T5-q1", "T5-q2"],
   },
   {
@@ -284,7 +286,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "If two vector spaces have the same dimension, they are the same 'shape' — just labeled differently. Polynomials of degree ≤ 2 form a 3D space (basis: 1, x, x²). R³ is also 3D. They are isomorphic. Any 2D vector space over R is isomorphic to R² itself. Dimension is all that matters for the structure.",
     prereqs: ["T5"],
     xp: 45,
-    playground: "matrix-cols",
+    playground: "isomorphism",
     questions: ["T6-q1"],
   },
   {
@@ -328,7 +330,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "The row space is the span of the rows of A. The column space is the span of the columns. Crucial fact: they ALWAYS have the same dimension — the rank of A. They live in different spaces though — row space ⊂ Rⁿ, column space ⊂ Rᵐ. The row space of A = the column space of Aᵀ.",
     prereqs: ["F1"],
     xp: 55,
-    playground: "four-subspaces",
+    playground: "row-col",
     questions: ["F2-q1"],
   },
   {
@@ -338,7 +340,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "A linear functional is a linear map f: V → R. The dot product is the classic example: f(v) = v · w for some fixed w. Linear functionals are everywhere — they measure angles, projections, weighted sums, expected values. They are the most useful kind of linear transformation.",
     prereqs: ["F2"],
     xp: 55,
-    playground: "dual",
+    playground: "functional",
     questions: ["F3-q1"],
   },
   {
@@ -358,7 +360,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "Take a basis {v₁, ..., vₙ} of V. There is a UNIQUE basis {f₁, ..., fₙ} of V* such that fᵢ(vⱼ) = 1 if i = j, else 0. The functional f₁ eats any vector and returns its first coordinate (in the original basis). The dual basis is the bookkeeping system for the dual space.",
     prereqs: ["F4"],
     xp: 55,
-    playground: "dual",
+    playground: "dual-basis",
     questions: ["F5-q1"],
   },
   {
@@ -388,7 +390,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "Take the dual space V*, then take ITS dual V**. For finite-dimensional spaces, V** is naturally isomorphic to V — there is a canonical map v → (f → f(v)). Every vector in V is exactly the set of functionals it 'equals' when tested. This is one of the deepest and most surprising facts in linear algebra.",
     prereqs: ["F7"],
     xp: 70,
-    playground: "dual",
+    playground: "double-dual",
     questions: ["F8-q1"],
   },
 

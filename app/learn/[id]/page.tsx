@@ -6,7 +6,7 @@ import { CONCEPT_BY_ID, type ConceptId } from "@/lib/curriculum";
 import { useProgress, useIsUnlocked } from "@/lib/progress";
 import { QUESTIONS_BY_CONCEPT, type Question } from "@/lib/questions";
 import { Playground } from "@/components/playground/Playground";
-import { Lock, Check, ChevronRight, Sparkles, ArrowLeft, ArrowRight } from "lucide-react";
+import { Lock, Check, X, ChevronRight, Sparkles, ArrowLeft, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 export default function ConceptPage({ params }: { params: Promise<{ id: string }> }) {
@@ -171,7 +171,10 @@ function TestTab({
 }) {
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  // submitted = student has checked at least once; locks the answer
   const [submitted, setSubmitted] = useState<Record<string, boolean>>({});
+  // correct = the final result for this question (true=eventually right, false=still wrong after retries)
+  const [correctMap, setCorrectMap] = useState<Record<string, boolean>>({});
   const [showHint, setShowHint] = useState<Record<string, boolean>>({});
   const [wrongAttempts, setWrongAttempts] = useState<Record<string, number>>({});
 
@@ -184,9 +187,9 @@ function TestTab({
   }
 
   const q = questions[idx];
-  const correctCount = questions.filter((qq) => answers[qq.id] && qq.options.find((o) => o.id === answers[qq.id])?.correct).length;
-  const totalAnswered = questions.filter((qq) => submitted[qq.id]).length;
-  const allCorrect = correctCount === questions.length && totalAnswered === questions.length;
+  const correctCount = Object.values(correctMap).filter(Boolean).length;
+  const answeredCount = Object.keys(submitted).length;
+  const allCorrect = answeredCount === questions.length && correctCount === questions.length;
 
   return (
     <div className="grid md:grid-cols-[1fr_240px] gap-6">
@@ -194,6 +197,12 @@ function TestTab({
         <div className="bg-card border border-line rounded-xl p-6">
           <div className="text-[10px] text-faint uppercase tracking-wider mb-3">
             Question {idx + 1} of {questions.length}
+            {correctMap[q.id] === true && (
+              <span className="ml-3 text-accent normal-case tracking-normal">✓ correct</span>
+            )}
+            {correctMap[q.id] === false && submitted[q.id] && (
+              <span className="ml-3 text-warn normal-case tracking-normal">× try again</span>
+            )}
           </div>
           <h3 className="font-serif text-xl text-ink mb-5">{q.prompt}</h3>
           <div className="space-y-2">
@@ -202,10 +211,17 @@ function TestTab({
               const selected = answers[q.id] === o.id;
               const isCorrect = o.correct;
               let cls = "border-line bg-elev/30 hover:bg-elev/60 text-ink";
+              let icon: React.ReactNode = null;
               if (isAnswered) {
-                if (selected && isCorrect) cls = "border-accent bg-accent/20 text-accent";
-                else if (selected && !isCorrect) cls = "border-warn bg-warn/20 text-warn";
-                else if (!selected && isCorrect) cls = "border-accent/30 bg-accent/5 text-accent/70";
+                if (isCorrect) {
+                  cls = "border-accent bg-accent/20 text-accent font-medium";
+                  icon = <Check size={14} className="inline ml-2 -mt-0.5" />;
+                } else if (selected) {
+                  cls = "border-warn bg-warn/20 text-warn line-through";
+                  icon = <X size={14} className="inline ml-2 -mt-0.5" />;
+                } else {
+                  cls = "border-line bg-elev/20 text-dim opacity-50";
+                }
               }
               return (
                 <button
@@ -214,10 +230,11 @@ function TestTab({
                     if (isAnswered) return;
                     setAnswers({ ...answers, [q.id]: o.id });
                   }}
-                  className={cn("w-full text-left p-3 rounded-lg border transition", cls)}
+                  className={cn("w-full text-left p-3 rounded-lg border transition flex items-center", cls)}
                 >
                   <span className="font-mono text-xs text-faint mr-2">{o.id.toUpperCase()}</span>
-                  {o.label}
+                  <span className="flex-1">{o.label}</span>
+                  {icon}
                 </button>
               );
             })}
@@ -231,7 +248,12 @@ function TestTab({
                   const chosen = q.options.find((o) => o.id === answers[q.id]);
                   if (chosen?.correct) {
                     setSubmitted({ ...submitted, [q.id]: true });
+                    setCorrectMap({ ...correctMap, [q.id]: true });
                   } else {
+                    // mark submitted so the visual feedback shows,
+                    // but record that this question is still wrong.
+                    setSubmitted({ ...submitted, [q.id]: true });
+                    setCorrectMap({ ...correctMap, [q.id]: false });
                     setWrongAttempts({ ...wrongAttempts, [q.id]: (wrongAttempts[q.id] || 0) + 1 });
                   }
                 }}
@@ -249,19 +271,44 @@ function TestTab({
                 </button>
               )}
             </div>
-          ) : (
+          ) : correctMap[q.id] === false ? (
             <div className="mt-4 space-y-3">
-              <div className="bg-elev/40 border border-line rounded p-3 text-sm text-dim leading-relaxed">
-                <span className="text-ink font-medium">Why: </span>
-                {q.explanation}
+              <div className="bg-warn/10 border border-warn/30 rounded p-3 text-sm leading-relaxed">
+                <div className="text-warn font-medium mb-1">
+                  Not quite — the correct option is highlighted in orange above.
+                </div>
+                <div className="text-dim text-xs">{q.explanation}</div>
               </div>
               <button
-                onClick={() => setIdx(Math.min(idx + 1, questions.length - 1))}
-                disabled={idx === questions.length - 1}
-                className="px-4 py-2 rounded border border-line text-ink hover:bg-elev transition disabled:opacity-30"
+                onClick={() => {
+                  // unlock to retry
+                  const newSub = { ...submitted };
+                  delete newSub[q.id];
+                  setSubmitted(newSub);
+                }}
+                className="px-4 py-2 rounded border border-line hover:bg-elev transition text-sm"
               >
-                Next question <ChevronRight size={14} className="inline" />
+                Try again
               </button>
+            </div>
+          ) : (
+            <div className="mt-4 space-y-3">
+              <div className="bg-correct/10 border border-correct/30 rounded p-3 text-sm text-correct/90 leading-relaxed">
+                <span className="text-correct font-medium">Correct! </span>
+                {q.explanation}
+              </div>
+              {idx < questions.length - 1 ? (
+                <button
+                  onClick={() => setIdx(idx + 1)}
+                  className="px-4 py-2 rounded border border-line text-ink hover:bg-elev transition"
+                >
+                  Next question <ChevronRight size={14} className="inline" />
+                </button>
+              ) : (
+                <div className="text-xs text-correct font-mono">
+                  All questions answered correctly. Mark complete below.
+                </div>
+              )}
             </div>
           )}
 
@@ -299,8 +346,8 @@ function TestTab({
         </div>
         <div className="flex flex-col gap-1.5">
           {questions.map((qq, i) => {
-            const isCorrect = submitted[qq.id] && qq.options.find((o) => o.id === answers[qq.id])?.correct;
-            const isWrong = submitted[qq.id] && !isCorrect;
+            const isCorrect = correctMap[qq.id] === true;
+            const isWrong = correctMap[qq.id] === false;
             return (
               <button
                 key={qq.id}
