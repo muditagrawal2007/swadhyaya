@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import { MatrixColumnsPlayground } from "./MatrixColumnsPlayground";
 import { LinePlayground } from "./LinePlayground";
 import { RREFPlayground } from "./RREFPlayground";
@@ -7,6 +8,7 @@ import { AddScalePlayground } from "./AddScalePlayground";
 import { SpanPlayground } from "./SpanPlayground";
 import { IndependencePlayground } from "./IndependencePlayground";
 import { EigenPlayground } from "./EigenPlayground";
+import { EigenDiscoverPlayground } from "./EigenDiscoverPlayground";
 import { SVDPlayground } from "./SVDPlayground";
 import { SVDImagePlayground } from "./SVDImagePlayground";
 import { PCAPlayground } from "./PCAPlayground";
@@ -21,6 +23,7 @@ import { BasisPlayground } from "./BasisPlayground";
 import { DimensionPlayground } from "./DimensionPlayground";
 import { TransformationPlayground } from "./TransformationPlayground";
 import { LinearMattersPlayground } from "./LinearMattersPlayground";
+const Transform3DPlayground = dynamic(() => import("./Transform3DPlayground").then(m => m.Transform3DPlayground), { ssr: false, loading: () => <div className="bg-card border border-line rounded-xl p-8 text-center text-dim">Loading 3D...</div> });
 import { NullRangePlayground2 } from "./NullRangePlayground2";
 import { RankNullityPlayground } from "./RankNullityPlayground";
 import { IsomorphismPlayground } from "./IsomorphismPlayground";
@@ -71,6 +74,8 @@ export function Playground({ id }: { id: PlaygroundId }) {
       return <TransformationPlayground />;
     case "linear-matters":
       return <LinearMattersPlayground />;
+    case "transform-3d":
+      return <Transform3DPlayground />;
     case "matrix-cols":
       return <MatrixColumnsPlayground />;
     case "matrix-times-mat":
@@ -110,6 +115,9 @@ export function Playground({ id }: { id: PlaygroundId }) {
 
     // Phase 5 — Eigenvalues
     case "eigen-discover":
+      return <EigenPlayground />;
+    case "eigen-discover-v2":
+      return <EigenDiscoverPlayground />;
     case "eigenvalue":
     case "characteristic":
     case "diagonalize":

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Lock, Check, Circle, ArrowRight } from "lucide-react";
+import { Lock, Check, Circle, ArrowRight, Trophy } from "lucide-react";
 import { CONCEPTS, PHASES, type ConceptId } from "@/lib/curriculum";
 import { useProgress } from "@/lib/progress";
 import { cn } from "@/lib/cn";
@@ -16,6 +16,7 @@ export default function LearnMap() {
           {CONCEPTS.length} concepts across {PHASES.length} phases. Lock in the
           intuition of one to unlock the next. No skipping. No broken chains.
         </p>
+        <NextUpBanner completed={completed} />
       </header>
 
       <div className="space-y-10">
@@ -142,5 +143,43 @@ function ConceptCard({
         </div>
       )}
     </Wrapper>
+  );
+}
+
+function NextUpBanner({ completed }: { completed: string[] }) {
+  // Find the first concept whose prereqs are all met but is not yet completed
+  const completedSet = new Set(completed);
+  const next = CONCEPTS.find((c) => {
+    if (completedSet.has(c.id)) return false;
+    return c.prereqs.every((p) => completedSet.has(p));
+  });
+  if (!next) {
+    return (
+      <div className="mt-4 bg-accent/10 border border-accent/40 rounded-xl p-4 flex items-center gap-3">
+        <Trophy size={18} className="text-accent shrink-0" />
+        <div>
+          <div className="text-sm text-accent font-medium">You've locked in the full chain.</div>
+          <div className="text-xs text-dim mt-0.5">Every concept is unlocked. Revisit any to deepen the intuition.</div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <Link
+      href={`/learn/${next.id}`}
+      className="mt-4 block bg-card border border-accent/30 rounded-xl p-4 hover:bg-elev/60 transition group"
+    >
+      <div className="text-[10px] text-faint uppercase tracking-wider mb-1">Up next</div>
+      <div className="flex items-center gap-3">
+        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-elev/40 text-accent">
+          {next.id}
+        </span>
+        <div className="flex-1">
+          <div className="text-sm text-ink group-hover:text-accent transition">{next.title}</div>
+          <div className="text-xs text-dim mt-0.5">{next.short}</div>
+        </div>
+        <ArrowRight size={14} className="text-accent shrink-0 group-hover:translate-x-0.5 transition" />
+      </div>
+    </Link>
   );
 }

@@ -27,7 +27,7 @@ export default function ConceptPage({ params }: { params: Promise<{ id: string }
   const complete = useProgress((s) => s.complete);
   const completed = useProgress((s) => s.completed);
 
-  const [tab, setTab] = useState<"story" | "play" | "test">("story");
+  const [tab, setTab] = useState<"story" | "play" | "test" | "whyCare" | "strang" | "connect">("story");
   const [puzzleSolved, setPuzzleSolved] = useState(isDone);
 
   if (!isUnlocked) {
@@ -91,10 +91,19 @@ export default function ConceptPage({ params }: { params: Promise<{ id: string }
         <p className="mt-1 text-base text-dim">{concept.short}</p>
       </header>
 
-      <nav className="flex items-center gap-1 border-b border-line mb-6">
+      <nav className="flex items-center gap-1 border-b border-line mb-6 overflow-x-auto">
         <TabButton active={tab === "story"} onClick={() => setTab("story")} n={1}>Story</TabButton>
         <TabButton active={tab === "play"} onClick={() => setTab("play")} n={2}>Playground</TabButton>
         <TabButton active={tab === "test"} onClick={() => setTab("test")} n={3}>Test</TabButton>
+        {concept.whyCare && (
+          <TabButton active={tab === "whyCare"} onClick={() => setTab("whyCare")} n={4}>Why care</TabButton>
+        )}
+        {concept.strang && (
+          <TabButton active={tab === "strang"} onClick={() => setTab("strang")} n={5}>Formal layer</TabButton>
+        )}
+        {concept.prereqs.length > 0 && (
+          <TabButton active={tab === "connect"} onClick={() => setTab("connect")} n={6}>Connect</TabButton>
+        )}
         {puzzleSolved && (
           <span className="ml-auto inline-flex items-center gap-1 text-xs text-accent">
             <Check size={12} /> Locked in
@@ -104,6 +113,11 @@ export default function ConceptPage({ params }: { params: Promise<{ id: string }
 
       {tab === "story" && <StoryTab story={concept.story} />}
       {tab === "play" && <Playground id={concept.playground} />}
+      {tab === "whyCare" && concept.whyCare && <WhyCareTab text={concept.whyCare} />}
+      {tab === "strang" && concept.strang && <StrangTab text={concept.strang} />}
+      {tab === "connect" && (
+        <ConnectTab prereqs={concept.prereqs} currentId={concept.id} completed={completed} />
+      )}
       {tab === "test" && (
         <TestTab
           questions={questions}
@@ -155,6 +169,97 @@ function StoryTab({ story }: { story: string }) {
             <li>Open the playground — play with the controls</li>
           </ul>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function WhyCareTab({ text }: { text: string }) {
+  return (
+    <div className="bg-card border border-line rounded-xl p-6">
+      <div className="text-[10px] text-warn uppercase tracking-wider mb-3 flex items-center gap-1.5">
+        <Sparkles size={11} /> Why should you care?
+      </div>
+      <p className="font-serif text-lg leading-relaxed text-ink/90">{text}</p>
+      <p className="text-xs text-dim mt-4">
+        The intuition you build here shows up everywhere. The playground is the practice.
+        Now open the playground tab and play.
+      </p>
+    </div>
+  );
+}
+
+function StrangTab({ text }: { text: string }) {
+  return (
+    <div className="bg-card border border-line rounded-xl p-6">
+      <div className="text-[10px] text-faint uppercase tracking-wider mb-3 flex items-center gap-1.5">
+        Formal layer · Gilbert Strang
+      </div>
+      <p className="font-serif text-base leading-relaxed text-ink/90">{text}</p>
+      <p className="text-xs text-dim mt-4">
+        The interactive playground above IS the geometry Strang describes in symbols.
+        Watch the picture move, then read the algebra — same idea, two languages.
+      </p>
+    </div>
+  );
+}
+
+function ConnectTab({
+  prereqs,
+  currentId,
+  completed,
+}: {
+  prereqs: string[];
+  currentId: string;
+  completed: string[];
+}) {
+  const prereqConcepts = prereqs.map((id) => CONCEPT_BY_ID[id as ConceptId]).filter(Boolean);
+  return (
+    <div className="space-y-4">
+      <div className="bg-card border border-line rounded-xl p-6">
+        <div className="text-[10px] text-faint uppercase tracking-wider mb-3">
+          This concept rests on
+        </div>
+        <div className="space-y-2">
+          {prereqConcepts.length === 0 ? (
+            <p className="text-sm text-dim">This is a starting concept — no prerequisites.</p>
+          ) : (
+            prereqConcepts.map((c) => {
+              const done = completed.includes(c.id);
+              return (
+                <Link
+                  key={c.id}
+                  href={`/learn/${c.id}`}
+                  className={`flex items-center gap-3 p-3 rounded-lg border transition ${
+                    done
+                      ? "border-accent/30 bg-accent/5 hover:bg-accent/10"
+                      : "border-line bg-elev/30 hover:bg-elev/60"
+                  }`}
+                >
+                  <span
+                    className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                    style={{
+                      background: "var(--bg-elev)",
+                      color: done ? "var(--accent)" : "var(--ink-dim)",
+                    }}
+                  >
+                    {c.id}
+                  </span>
+                  <span className="text-sm text-ink flex-1">{c.title}</span>
+                  {done ? (
+                    <span className="text-[10px] text-accent">✓ locked in</span>
+                  ) : (
+                    <span className="text-[10px] text-faint">review</span>
+                  )}
+                </Link>
+              );
+            })
+          )}
+        </div>
+      </div>
+      <div className="bg-elev/40 border border-line rounded-xl p-4 text-xs text-dim leading-relaxed">
+        The curriculum is a directed graph: each concept unlocks the next. The chain never breaks.
+        Every concept is downstream of everything above it.
       </div>
     </div>
   );

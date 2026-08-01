@@ -8,7 +8,7 @@ export type ConceptId =
   // Phase 2 — Vector Spaces
   | "V1" | "V2" | "V3" | "V4" | "V5" | "V6" | "V7" | "V8"
   // Phase 3 — Linear Transformations
-  | "T1" | "T2" | "T3" | "T4" | "T5" | "T6" | "T7" | "T8"
+  | "T1" | "T2" | "T2b" | "T3" | "T4" | "T5" | "T6" | "T7" | "T8"
   // Phase 4 — Four Subspaces & Dual
   | "F1" | "F2" | "F3" | "F4" | "F5" | "F6" | "F7" | "F8"
   // Phase 5 — Eigenvalues
@@ -29,16 +29,18 @@ export interface ConceptNode {
   xp: number;
   playground: PlaygroundId;
   questions: QuestionId[];
+  whyCare?: string;       // real-world application
+  strang?: string;        // formal layer reference
 }
 
 export type PlaygroundId =
   | "lines-2d" | "intersect" | "row-ops" | "gaussian" | "rref" | "homogeneous"
   | "vector-arrow" | "add-scale"
   | "span" | "independence" | "basis" | "dimension"
-  | "transformation" | "linear-matters" | "matrix-cols" | "matrix-times-vec" | "matrix-times-mat"
+  | "transformation" | "linear-matters" | "transform-3d" | "matrix-cols" | "matrix-times-vec" | "matrix-times-mat"
   | "big-four" | "determinant" | "inverse" | "rank" | "null-range" | "rank-nullity" | "isomorphism"
   | "four-subspaces" | "row-col" | "functional" | "dual" | "dual-basis" | "annihilator" | "transpose" | "double-dual"
-  | "eigen-discover" | "eigenvalue" | "characteristic" | "diagonalize"
+  | "eigen-discover" | "eigen-discover-v2" | "eigenvalue" | "characteristic" | "diagonalize"
   | "svd-animate" | "svd-image" | "pca" | "least-squares";
 
 export type QuestionId = string;
@@ -70,6 +72,8 @@ export const CONCEPTS: ConceptNode[] = [
     xp: 10,
     playground: "lines-2d",
     questions: ["L1-q1", "L1-q2"],
+    whyCare: "Every physics equation (F=ma, E=mc²) is an equation. Every business calculation (price × quantity = revenue) is one. Equations are how the world answers questions.",
+    strang: "Strang §1.1 — the geometry of linear equations. The first three pages of his book.",
   },
   {
     id: "L2", phase: 1, order: 2,
@@ -250,6 +254,16 @@ export const CONCEPTS: ConceptNode[] = [
     questions: ["T2-q1", "T2-q2"],
   },
   {
+    id: "T2b", phase: 3, order: 7,
+    title: "3D Transformations — Warping a House in Space",
+    short: "The same idea, but in 3D. A matrix is a recipe for warping 3D space.",
+    story: "You saw how a 2D matrix warps the plane. In 3D, the same idea: a 3x3 matrix is a recipe for warping 3D space. The columns of the matrix tell you where the basis vectors i, j, k go. Watch a 3D house get sheared, scaled, and rotated by dragging the matrix entries. The wireframe of the original (grey) is overlaid so you can see the deformation.",
+    prereqs: ["T2"],
+    xp: 45,
+    playground: "transform-3d",
+    questions: ["T2b-q1"],
+  },
+  {
     id: "T3", phase: 3, order: 3,
     title: "The Matrix of a Transformation",
     short: "Where does i-hat go? Where does j-hat go? Those two arrows ARE the matrix.",
@@ -404,8 +418,10 @@ export const CONCEPTS: ConceptNode[] = [
     story: "Apply a transformation to a vector. Usually the result points in a new direction. But for some magic vectors, the result is just a SCALED version of the original — same direction, different length. These are the eigenvectors. They are the transformation's 'preferred directions'. The student finds them by exploration: which input gives a collinear output?",
     prereqs: ["F8"],
     xp: 60,
-    playground: "eigen-discover",
+    playground: "eigen-discover-v2",
     questions: ["E1-q1", "E1-q2"],
+    whyCare: "Principal Component Analysis (PCA) finds the eigenvectors of the covariance matrix to find the directions your data varies most in. Google uses it to rank pages (PageRank). Quantum mechanics states are eigenvectors of the Hamiltonian operator.",
+    strang: "Strang §6.1 — eigenvalues and eigenvectors. His geometric intuition: Ax = λx is the 'special direction' that doesn't change.",
   },
   {
     id: "E2", phase: 5, order: 2,
@@ -480,6 +496,8 @@ export const CONCEPTS: ConceptNode[] = [
     xp: 85,
     playground: "svd-image",
     questions: ["S2-q1", "S2-q2"],
+    whyCare: "Instagram compresses your photos with SVD. MRI scans use SVD to reconstruct images from incomplete data. Google's search rank uses SVD on the link matrix. The Netflix recommendation engine uses SVD on the user-movie matrix to find the 'principal tastes'.",
+    strang: "Strang §7.1 — the singular value decomposition. He calls it 'the most important theorem in linear algebra'.",
   },
   {
     id: "S3", phase: 6, order: 3,
@@ -490,6 +508,8 @@ export const CONCEPTS: ConceptNode[] = [
     xp: 80,
     playground: "pca",
     questions: ["S3-q1"],
+    whyCare: "Face unlock on your phone uses PCA. The Eigenfaces algorithm represents every face as a combination of ~100 principal components. Genome analysis, financial risk modeling, and recommendation systems all use PCA.",
+    strang: "Strang §7.3 — principal component analysis. He shows the geometric meaning: find the directions of maximum variance.",
   },
   {
     id: "S4", phase: 6, order: 4,
