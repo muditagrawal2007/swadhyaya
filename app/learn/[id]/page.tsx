@@ -1,5 +1,5 @@
 "use client";
-import { useState, use } from "react";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { notFound, useRouter } from "next/navigation";
@@ -43,6 +43,40 @@ export default function ConceptPage({ params }: { params: Promise<{ id: string }
 
   const [tab, setTab] = useState<"story" | "play" | "test" | "whyCare" | "strang" | "connect">("story");
   const [puzzleSolved, setPuzzleSolved] = useState(isDone);
+
+  // Keyboard shortcuts: 1-6 for tabs, Esc to go back.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      // Don't steal focus from input/textarea/contenteditable.
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const map: Record<string, typeof tab | ""> = {
+        "1": "story",
+        "2": "play",
+        "3": "test",
+        "4": concept.whyCare ? "whyCare" : "",
+        "5": concept.strang ? "strang" : "",
+        "6": concept.prereqs.length > 0 ? "connect" : "",
+      };
+      const next = map[e.key];
+      if (next) {
+        e.preventDefault();
+        setTab(next);
+      } else if (e.key === "Escape") {
+        window.history.back();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [concept.whyCare, concept.strang, concept.prereqs.length]);
 
   if (!isUnlocked) {
     return (
@@ -123,6 +157,12 @@ export default function ConceptPage({ params }: { params: Promise<{ id: string }
             <Check size={12} /> Locked in
           </span>
         )}
+        <span className="ml-auto hidden lg:inline-flex items-center gap-2 text-[10px] text-faint font-mono">
+          <kbd className="px-1.5 py-0.5 rounded border border-line bg-elev/50">1–6</kbd>
+          tabs
+          <kbd className="px-1.5 py-0.5 rounded border border-line bg-elev/50 ml-1">Esc</kbd>
+          back
+        </span>
       </nav>
 
       {tab === "story" && <StoryTab story={concept.story} />}

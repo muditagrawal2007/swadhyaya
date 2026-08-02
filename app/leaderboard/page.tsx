@@ -1,7 +1,7 @@
 "use client";
 import { useProgress, levelFromXP, xpForLevel, xpForNextLevel } from "@/lib/progress";
-import { Trophy, Medal, Award, Target, Flame, Zap } from "lucide-react";
-import { useMemo } from "react";
+import { Trophy, Medal, Award, Target, Flame, Zap, Download, Upload, RotateCcw } from "lucide-react";
+import { useMemo, useState } from "react";
 import { CONCEPT_BY_ID, PHASES, type ConceptId } from "@/lib/curriculum";
 
 export default function LeaderboardPage() {
@@ -9,6 +9,67 @@ export default function LeaderboardPage() {
   const xp = useProgress((s) => s.xp);
   const streak = useProgress((s) => s.streak);
   const totalConcepts = Object.keys(CONCEPT_BY_ID).length;
+  const [resetConfirm, setResetConfirm] = useState(false);
+  const [importMsg, setImportMsg] = useState<string | null>(null);
+
+  const handleExport = () => {
+    const data = {
+      completed,
+      xp,
+      streak,
+      lastVisit: new Date().toISOString().slice(0, 10),
+      lensModes: useProgress.getState().lensModes,
+      exportedAt: new Date().toISOString(),
+      schema: "swadhyaya.v1",
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `swadhyaya-progress-${data.lastVisit}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(String(e.target?.result || "{}"));
+        if (
+          typeof parsed !== "object" ||
+          !Array.isArray(parsed.completed) ||
+          typeof parsed.xp !== "number"
+        ) {
+          setImportMsg("Invalid file — missing fields.");
+          return;
+        }
+        const store = useProgress.getState();
+        useProgress.setState({
+          completed: parsed.completed,
+          xp: parsed.xp,
+          streak: parsed.streak ?? 1,
+          lastVisit: parsed.lastVisit ?? new Date().toISOString().slice(0, 10),
+          lensModes: parsed.lensModes ?? [],
+        });
+        setImportMsg(
+          `Imported ${parsed.completed.length} concepts, ${parsed.xp} XP.`,
+        );
+      } catch {
+        setImportMsg("Could not parse the file as JSON.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleReset = () => {
+    useProgress.getState().reset();
+    setResetConfirm(false);
+  };
 
   const phaseProgress = useMemo(() => {
     return PHASES.map((p) => {
@@ -117,7 +178,7 @@ export default function LeaderboardPage() {
       </div>
 
       {/* Recent unlocks */}
-      <div className="bg-card border border-line rounded-xl p-4">
+      <div className="bg-card border border-line rounded-xl p-4 mb-6">
         <div className="text-[10px] text-faint uppercase tracking-wider mb-3">
           Recent unlocks
         </div>
@@ -152,6 +213,67 @@ export default function LeaderboardPage() {
               );
             })}
           </ol>
+        )}
+      </div>
+
+      {/* Data management — own your progress */}
+      <div className="bg-card border border-line rounded-xl p-4">
+        <div className="text-[10px] text-faint uppercase tracking-wider mb-3">
+          Your data
+        </div>
+        <p className="text-xs text-dim leading-relaxed mb-4">
+          Progress is stored in this browser only. Back it up by exporting to
+          a JSON file; restore on another device by importing it.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={handleExport}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-line text-sm text-ink hover:bg-elev transition"
+          >
+            <Download size={14} />
+            Export
+          </button>
+          <label className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-line text-sm text-ink hover:bg-elev transition cursor-pointer">
+            <Upload size={14} />
+            Import
+            <input
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleImport(f);
+                e.target.value = ""; // allow re-importing same file
+              }}
+            />
+          </label>
+          {!resetConfirm ? (
+            <button
+              onClick={() => setResetConfirm(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-warn/40 text-sm text-warn hover:bg-warn/10 transition"
+            >
+              <RotateCcw size={14} />
+              Reset
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleReset}
+                className="px-3 py-2 rounded-md bg-warn text-canvas text-sm font-medium hover:bg-warn/90 transition"
+              >
+                Confirm reset
+              </button>
+              <button
+                onClick={() => setResetConfirm(false)}
+                className="px-3 py-2 rounded-md border border-line text-sm text-dim hover:bg-elev transition"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+        {importMsg && (
+          <div className="mt-3 text-xs text-dim">{importMsg}</div>
         )}
       </div>
     </div>
