@@ -42,6 +42,8 @@ import { DualBasisPlayground } from "./DualBasisPlayground";
 import { AnnihilatorPlayground } from "./AnnihilatorPlayground";
 import { TransposePlayground } from "./TransposePlayground";
 import { DoubleDualPlayground } from "./DoubleDualPlayground";
+import { QL1Q1Playground } from "./QL1Q1Playground";
+import { QE5Q1Playground } from "./QE5Q1Playground";
 import type { PlaygroundId } from "@/lib/curriculum";
 
 export function Playground({ id }: { id: PlaygroundId }) {
@@ -155,6 +157,12 @@ export function Playground({ id }: { id: PlaygroundId }) {
       return <PCAPlayground />;
     case "least-squares":
       return <LeastSquaresPlayground />;
+
+    // Question-specific playgrounds
+    case "q-L1-q1":
+      return <QL1Q1Playground />;
+    case "q-E5-q1":
+      return <QE5Q1Playground />;
 
     default:
       return (

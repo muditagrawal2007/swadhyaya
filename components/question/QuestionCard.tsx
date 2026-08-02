@@ -2,6 +2,8 @@
 import { Check, X, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { Question } from "@/lib/questions";
+import { Playground } from "@/components/playground/Playground";
+import type { PlaygroundId } from "@/lib/curriculum";
 
 interface QuestionCardProps {
   question: Question;
@@ -23,6 +25,8 @@ interface QuestionCardProps {
 // Shared rendering for every question across every concept.
 // One source of truth — prompt, options, check, feedback, hint.
 // Same chrome regardless of concept, playground, or question type.
+// When q.playground is set, the question-specific interactive widget
+// renders above the options — the playground drives the question.
 export function QuestionCard({
   question: q,
   index: idx,
@@ -53,6 +57,12 @@ export function QuestionCard({
         )}
       </div>
       <h3 className="font-serif text-xl text-ink mb-5">{q.prompt}</h3>
+
+      {q.playground && (
+        <div className="mb-5">
+          <Playground id={q.playground as PlaygroundId} />
+        </div>
+      )}
 
       <div className="space-y-2">
         {q.options.map((o) => {

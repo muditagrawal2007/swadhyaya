@@ -41,7 +41,13 @@ export type PlaygroundId =
   | "big-four" | "determinant" | "inverse" | "rank" | "null-range" | "rank-nullity" | "isomorphism"
   | "four-subspaces" | "row-col" | "functional" | "dual" | "dual-basis" | "annihilator" | "transpose" | "double-dual"
   | "eigen-discover" | "eigen-discover-v2" | "eigenvalue" | "characteristic" | "characteristic-2" | "cayley-hamilton" | "minimal-poly" | "diagonalize"
-  | "svd-animate" | "svd-image" | "pca" | "least-squares";
+  | "svd-animate" | "svd-image" | "pca" | "least-squares"
+  // Question-specific playgrounds — one per question that earns its own
+  // bespoke interactive widget. The Playground tab for the concept shows
+  // the concept-level widget; the Test tab question embeds the q-level one
+  // above the options so the student can manipulate the math and observe
+  // the answer directly.
+  | "q-L1-q1" | "q-E5-q1";
 
 export type QuestionId = string;
 

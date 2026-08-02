@@ -10,6 +10,11 @@ export interface Question {
   prompt: string;
   hint: string;
   xp: number;
+  // Optional: a question-specific interactive playground. When set, the
+  // question UI embeds this widget above the options, so the student
+  // can manipulate the math directly and observe which option becomes
+  // correct. Falls back to text-only options if absent.
+  playground?: string;
   options: Array<{ id: string; label: string; correct?: boolean }>;
   explanation: string;
 }
@@ -24,7 +29,8 @@ const q = (
   explanation: string,
   hint: string = "Re-read the playground carefully.",
   xp: number = 10,
-): Question => ({ id: `${conceptId}-${++_qid}`, conceptId, type, prompt, options, explanation, hint, xp });
+  playground?: string,
+): Question => ({ id: `${conceptId}-${++_qid}`, conceptId, type, prompt, options, explanation, hint, xp, playground });
 
 export const QUESTIONS: Question[] = [
   // L1
@@ -36,7 +42,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "x = 5" },
       { id: "d", label: "x = 8" },
     ],
-    "2x = 8, so x = 4. The two sides of the equation agree at x = 4."),
+    "2x = 8, so x = 4. The two sides of the equation agree at x = 4.",
+    "Drag the slider on the weighing scale until both pans balance.",
+    10,
+    "q-L1-q1"),
   q("L1", "truefalse",
     "The equation y = 2x + 1 is satisfied at the point (0, 0).",
     [
@@ -585,7 +594,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "The identity" },
       { id: "d", label: "A - 2I" },
     ],
-    "Cayley-Hamilton: p(A) = A² - 4A + 4I. A² = [[4, 4], [0, 4]], so A² - 4A + 4I = [[4-8+4, 4-4+0], [0, 0-8+4]] = [[0, 0], [0, 0]]. Always zero — that's the theorem."),
+    "Cayley-Hamilton: p(A) = A² - 4A + 4I. A² = [[4, 4], [0, 4]], so A² - 4A + 4I = [[4-8+4, 4-4+0], [0, 0-8+4]] = [[0, 0], [0, 0]]. Always zero — that's the theorem.",
+    "Watch the live computation in the playground below — every term is computed and summed, ending at the zero matrix.",
+    10,
+    "q-E5-q1"),
   q("E5", "truefalse",
     "Cayley-Hamilton says: every matrix is a root of its own characteristic polynomial.",
     [
