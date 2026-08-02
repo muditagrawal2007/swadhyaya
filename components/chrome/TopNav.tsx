@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
-import { Flame, Layers, Menu } from "lucide-react";
+import { Flame, Layers } from "lucide-react";
 import { useProgress, levelFromXP, xpForLevel, xpForNextLevel } from "@/lib/progress";
-import { useState } from "react";
 import { AuthButton } from "./AuthButton";
+import { CONCEPTS } from "@/lib/curriculum";
 
 export function TopNav() {
   const xp = useProgress((s) => s.xp);
@@ -61,7 +61,7 @@ export function TopNav() {
 }
 
 function totalConcepts() {
-  return 47; // 47 concepts total in current scope
+  return CONCEPTS.length;
 }
 
 function Logo() {

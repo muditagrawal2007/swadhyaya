@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Map, Trophy, BookOpen } from "lucide-react";
-import { PHASES } from "@/lib/curriculum";
+import { PHASES, CONCEPTS } from "@/lib/curriculum";
 import { useProgress } from "@/lib/progress";
 import { cn } from "@/lib/cn";
 
@@ -96,8 +96,7 @@ export function SideRail() {
 }
 
 function getPhaseCount(phase: number) {
-  // Phase 6 has 5 concepts (S1-S5). Total: 8+8+8+8+6+5 = 43.
-  return [8, 8, 8, 8, 6, 5][phase - 1];
+  return CONCEPTS.filter((c) => c.phase === phase).length;
 }
 function getPhaseDone(phase: number, completed: string[]) {
   const prefix = ["L", "V", "T", "F", "E", "S"][phase - 1];

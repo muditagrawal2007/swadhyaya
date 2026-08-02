@@ -1,13 +1,25 @@
 "use client";
 import { useEffect, useState } from "react";
 
-// Samagama.in auth integration scaffold.
-// The full OAuth round-trip (popup, callback, token exchange, profile fetch) is
-// stubbed here. Drop the real implementation into the TODO blocks once you have
-// the auth provider's JS SDK and client id.
+// Auth state is intentionally deferred.
 //
-// Auth state is mirrored into a localStorage key so the rest of the app can
-// read it synchronously without prop-drilling.
+// Samagama.in is the planned identity provider, but the OAuth client
+// credentials and JS SDK are not yet wired. Until they are, the platform
+// runs fully without authentication: progress is saved to localStorage,
+// no login is required, and no fake/demo user is created.
+//
+// To enable real auth:
+//   1. Set NEXT_PUBLIC_SAMAGAMA_AUTH_URL, NEXT_PUBLIC_SAMAGAMA_CLIENT_ID,
+//      NEXT_PUBLIC_SAMAGAMA_REDIRECT_URI, and SAMAGAMA_CLIENT_SECRET in
+//      .env (see .env.example).
+//   2. Implement the OAuth round-trip in `login()` below (popup,
+//      callback, token exchange, profile fetch).
+//   3. Set AUTH_ENABLED to true.
+//
+// Until then, useAuth() returns { status: "disabled", user: null } and
+// the UI shows an honest "Sign in is paused — your progress saves locally".
+
+export type AuthStatus = "loading" | "disabled";
 
 export interface AuthUser {
   id: string;
@@ -16,45 +28,38 @@ export interface AuthUser {
   avatarUrl?: string;
 }
 
-const AUTH_KEY = "swadhyaya-auth";
+interface AuthState {
+  status: AuthStatus;
+  user: AuthUser | null;
+}
 
-export function useAuth() {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+const AUTH_ENABLED = false;
+
+export function useAuth(): AuthState & {
+  login: () => Promise<void>;
+  logout: () => void;
+} {
+  const [state, setState] = useState<AuthState>({
+    status: "loading",
+    user: null,
+  });
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(AUTH_KEY);
-      if (raw) setUser(JSON.parse(raw));
-    } catch {
-      // ignore parse errors
+    if (!AUTH_ENABLED) {
+      setState({ status: "disabled", user: null });
     }
-    setLoading(false);
   }, []);
 
   const login = async () => {
-    // TODO: replace with real samagama.in OAuth flow.
-    // Typical flow:
-    //   1. Open samagama.in /authorize?client_id=...&redirect_uri=...
-    //   2. User signs in, samagama.in redirects to /auth/callback?code=...
-    //   3. Server exchanges code for access_token + id_token
-    //   4. Decode id_token, fetch user profile, persist to localStorage
-    //
-    // For now, a placeholder is created so the UI can be developed end-to-end.
-    const placeholder: AuthUser = {
-      id: "demo",
-      name: "Demo Student",
-      email: "demo@samagama.in",
-      avatarUrl: undefined,
-    };
-    localStorage.setItem(AUTH_KEY, JSON.stringify(placeholder));
-    setUser(placeholder);
+    // Disabled. Wire the real samagama.in OAuth flow when credentials land.
+    throw new Error(
+      "Sign-in is paused — see lib/auth.ts to enable when samagama.in credentials are configured.",
+    );
   };
 
   const logout = () => {
-    localStorage.removeItem(AUTH_KEY);
-    setUser(null);
+    // no-op while auth is disabled
   };
 
-  return { user, loading, login, logout };
+  return { ...state, login, logout };
 }
