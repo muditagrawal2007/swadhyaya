@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Lock, Check, Circle, ArrowRight, Trophy } from "lucide-react";
+import { Lock, Check, Circle, ArrowRight, Trophy, Zap } from "lucide-react";
 import { CONCEPTS, PHASES, type ConceptId } from "@/lib/curriculum";
 import { useProgress } from "@/lib/progress";
 import { cn } from "@/lib/cn";
@@ -17,6 +17,7 @@ export default function LearnMap() {
           intuition of one to unlock the next. No skipping. No broken chains.
         </p>
         <NextUpBanner completed={completed} />
+        {process.env.NODE_ENV !== "production" && <DevUnlockAll />}
       </header>
 
       <div className="space-y-10">
@@ -181,5 +182,33 @@ function NextUpBanner({ completed }: { completed: string[] }) {
         <ArrowRight size={14} className="text-accent shrink-0 group-hover:translate-x-0.5 transition" />
       </div>
     </Link>
+  );
+}
+
+// Dev-only: unlocks all concepts at once so reviewers can navigate
+// the full chain without grinding through 44 in sequence. Stripped
+// from production builds by the NODE_ENV check.
+function DevUnlockAll() {
+  const handleUnlock = () => {
+    const store = useProgress.getState();
+    const ids = CONCEPTS.map((c) => c.id);
+    const xp = CONCEPTS.reduce((s, c) => s + c.xp, 0);
+    useProgress.setState({
+      completed: ids,
+      xp,
+      streak: Math.max(store.streak, 1),
+      lastVisit: new Date().toISOString().slice(0, 10),
+      lensModes: store.lensModes,
+    });
+  };
+  return (
+    <button
+      onClick={handleUnlock}
+      className="mt-3 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-faint hover:text-warn transition"
+      title="Dev only — unlock everything for QA"
+    >
+      <Zap size={11} />
+      Dev: unlock all
+    </button>
   );
 }
