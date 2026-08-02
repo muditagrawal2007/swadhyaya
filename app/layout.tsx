@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { TopNav } from "@/components/chrome/TopNav";
 import { SideRail } from "@/components/chrome/SideRail";
+import { MobileNav } from "@/components/chrome/MobileNav";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Swadhyaya";
@@ -72,10 +73,11 @@ export default function RootLayout({
         <TopNav />
         <div className="flex">
           <SideRail />
-          <main className="flex-1 min-h-[calc(100vh-56px)]">
+          <main className="flex-1 min-h-[calc(100vh-56px)] pb-14 md:pb-0">
             {children}
           </main>
         </div>
+        <MobileNav />
       </body>
     </html>
   );
