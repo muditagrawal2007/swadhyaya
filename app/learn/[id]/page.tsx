@@ -7,7 +7,9 @@ import { CONCEPT_BY_ID, type ConceptId } from "@/lib/curriculum";
 import { useProgress, useIsUnlocked } from "@/lib/progress";
 import { QUESTIONS_BY_CONCEPT, type Question } from "@/lib/questions";
 import { Playground } from "@/components/playground/Playground";
-import { Lock, Check, X, ChevronRight, Sparkles, ArrowLeft, ArrowRight } from "lucide-react";
+import { QuestionCard } from "@/components/question/QuestionCard";
+import { QuestionNav } from "@/components/question/QuestionNav";
+import { Lock, Check, Sparkles, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const fireConfetti = async () => {
@@ -307,140 +309,61 @@ function TestTab({
   const q = questions[idx];
   const correctCount = Object.values(correctMap).filter(Boolean).length;
   const answeredCount = Object.keys(submitted).length;
-  const allCorrect = answeredCount === questions.length && correctCount === questions.length;
+  const allCorrect =
+    answeredCount === questions.length && correctCount === questions.length;
+
+  const handleCheck = () => {
+    const chosenId = answers[q.id];
+    if (!chosenId) return;
+    const chosen = q.options.find((o) => o.id === chosenId);
+    if (chosen?.correct) {
+      setSubmitted({ ...submitted, [q.id]: true });
+      setCorrectMap({ ...correctMap, [q.id]: true });
+    } else {
+      setSubmitted({ ...submitted, [q.id]: true });
+      setCorrectMap({ ...correctMap, [q.id]: false });
+      setWrongAttempts({
+        ...wrongAttempts,
+        [q.id]: (wrongAttempts[q.id] || 0) + 1,
+      });
+    }
+  };
+
+  const handleRetry = () => {
+    const newSub = { ...submitted };
+    delete newSub[q.id];
+    setSubmitted(newSub);
+  };
 
   return (
     <div className="grid md:grid-cols-[1fr_240px] gap-6">
       <div>
-        <div className="bg-card border border-line rounded-xl p-6">
-          <div className="text-[10px] text-faint uppercase tracking-wider mb-3">
-            Question {idx + 1} of {questions.length}
-            {correctMap[q.id] === true && (
-              <span className="ml-3 text-accent normal-case tracking-normal">✓ correct</span>
-            )}
-            {correctMap[q.id] === false && submitted[q.id] && (
-              <span className="ml-3 text-warn normal-case tracking-normal">× try again</span>
-            )}
-          </div>
-          <h3 className="font-serif text-xl text-ink mb-5">{q.prompt}</h3>
-          <div className="space-y-2">
-            {q.options.map((o) => {
-              const isAnswered = submitted[q.id];
-              const selected = answers[q.id] === o.id;
-              const isCorrect = o.correct;
-              let cls = "border-line bg-elev/30 hover:bg-elev/60 text-ink";
-              let icon: React.ReactNode = null;
-              if (isAnswered) {
-                if (isCorrect) {
-                  cls = "border-accent bg-accent/20 text-accent font-medium";
-                  icon = <Check size={14} className="inline ml-2 -mt-0.5" />;
-                } else if (selected) {
-                  cls = "border-warn bg-warn/20 text-warn line-through";
-                  icon = <X size={14} className="inline ml-2 -mt-0.5" />;
-                } else {
-                  cls = "border-line bg-elev/20 text-dim opacity-50";
-                }
-              }
-              return (
-                <button
-                  key={o.id}
-                  onClick={() => {
-                    if (isAnswered) return;
-                    setAnswers({ ...answers, [q.id]: o.id });
-                  }}
-                  className={cn("w-full text-left p-3 rounded-lg border transition flex items-center", cls)}
-                >
-                  <span className="font-mono text-xs text-faint mr-2">{o.id.toUpperCase()}</span>
-                  <span className="flex-1">{o.label}</span>
-                  {icon}
-                </button>
-              );
-            })}
-          </div>
-
-          {!submitted[q.id] ? (
-            <div className="mt-4 flex items-center gap-2">
-              <button
-                onClick={() => {
-                  if (!answers[q.id]) return;
-                  const chosen = q.options.find((o) => o.id === answers[q.id]);
-                  if (chosen?.correct) {
-                    setSubmitted({ ...submitted, [q.id]: true });
-                    setCorrectMap({ ...correctMap, [q.id]: true });
-                  } else {
-                    // mark submitted so the visual feedback shows,
-                    // but record that this question is still wrong.
-                    setSubmitted({ ...submitted, [q.id]: true });
-                    setCorrectMap({ ...correctMap, [q.id]: false });
-                    setWrongAttempts({ ...wrongAttempts, [q.id]: (wrongAttempts[q.id] || 0) + 1 });
-                  }
-                }}
-                disabled={!answers[q.id]}
-                className="px-4 py-2 rounded bg-accent text-canvas font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/90 transition"
-              >
-                Check
-              </button>
-              <button
-                onClick={() => setShowHint({ ...showHint, [q.id]: true })}
-                className="text-xs text-warn hover:text-warn/80"
-              >
-                {showHint[q.id] ? "Hint shown" : "Show hint"}
-              </button>
-            </div>
-          ) : correctMap[q.id] === false ? (
-            <div className="mt-4 space-y-3">
-              <div className="bg-warn/10 border border-warn/30 rounded p-3 text-sm leading-relaxed">
-                <div className="text-warn font-medium mb-1">
-                  Not quite — the correct option is highlighted in orange above.
-                </div>
-                <div className="text-dim text-xs">{q.explanation}</div>
-              </div>
-              <button
-                onClick={() => {
-                  // unlock to retry
-                  const newSub = { ...submitted };
-                  delete newSub[q.id];
-                  setSubmitted(newSub);
-                }}
-                className="px-4 py-2 rounded border border-line hover:bg-elev transition text-sm"
-              >
-                Try again
-              </button>
-            </div>
-          ) : (
-            <div className="mt-4 space-y-3">
-              <div className="bg-correct/10 border border-correct/30 rounded p-3 text-sm text-correct/90 leading-relaxed">
-                <span className="text-correct font-medium">Correct! </span>
-                {q.explanation}
-              </div>
-              {idx < questions.length - 1 ? (
-                <button
-                  onClick={() => setIdx(idx + 1)}
-                  className="px-4 py-2 rounded border border-line text-ink hover:bg-elev transition"
-                >
-                  Next question <ChevronRight size={14} className="inline" />
-                </button>
-              ) : (
-                <div className="text-xs text-correct font-mono">
-                  All questions answered correctly. Mark complete below.
-                </div>
-              )}
-            </div>
-          )}
-
-          {showHint[q.id] && (
-            <div className="mt-3 bg-warn/10 border border-warn/30 rounded p-3 text-xs text-warn/90 leading-relaxed">
-              <span className="font-medium">Hint: </span>
-              {q.hint}
-            </div>
-          )}
-        </div>
+        <QuestionCard
+          question={q}
+          index={idx}
+          total={questions.length}
+          selected={answers[q.id]}
+          submitted={!!submitted[q.id]}
+          isCorrect={correctMap[q.id] === true}
+          showHint={!!showHint[q.id]}
+          wrongAttempts={wrongAttempts[q.id] || 0}
+          isLast={idx === questions.length - 1}
+          onSelect={(id) => setAnswers({ ...answers, [q.id]: id })}
+          onCheck={handleCheck}
+          onShowHint={() => setShowHint({ ...showHint, [q.id]: true })}
+          onRetry={handleRetry}
+          onNext={() => setIdx(idx + 1)}
+        />
 
         {allCorrect && (
           <div className="mt-4 bg-accent/10 border border-accent/40 rounded-xl p-6 text-center">
             <Sparkles size={24} className="mx-auto text-accent" />
-            <h3 className="mt-2 font-serif text-xl text-ink">All correct — locked in</h3>
-            <p className="text-sm text-dim mt-1">+{questions.reduce((s, qq) => s + qq.xp, 0)} XP earned</p>
+            <h3 className="mt-2 font-serif text-xl text-ink">
+              All correct — locked in
+            </h3>
+            <p className="text-sm text-dim mt-1">
+              +{questions.reduce((s, qq) => s + qq.xp, 0)} XP earned
+            </p>
             <button
               onClick={onPass}
               disabled={alreadyDone}
@@ -452,39 +375,12 @@ function TestTab({
         )}
       </div>
 
-      <div className="space-y-2">
-        <div className="text-[10px] text-faint uppercase tracking-wider">Progress</div>
-        <div className="bg-card border border-line rounded-xl p-3">
-          <div className="text-2xl font-mono text-ink">
-            {correctCount}<span className="text-faint text-sm"> / {questions.length}</span>
-          </div>
-          <div className="text-xs text-dim mt-1">correct</div>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          {questions.map((qq, i) => {
-            const isCorrect = correctMap[qq.id] === true;
-            const isWrong = correctMap[qq.id] === false;
-            return (
-              <button
-                key={qq.id}
-                onClick={() => setIdx(i)}
-                className={cn(
-                  "flex items-center justify-between p-2 rounded text-xs border transition",
-                  i === idx
-                    ? "border-accent bg-accent/10"
-                    : "border-line bg-elev/30 hover:bg-elev/60",
-                  isCorrect && "text-accent",
-                  isWrong && "text-warn",
-                )}
-              >
-                <span>Q{i + 1}</span>
-                {isCorrect && <Check size={11} />}
-                {isWrong && <span>×</span>}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <QuestionNav
+        questions={questions}
+        activeIndex={idx}
+        correctMap={correctMap}
+        onJump={setIdx}
+      />
     </div>
   );
 }
