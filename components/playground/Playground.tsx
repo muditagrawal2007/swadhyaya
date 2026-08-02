@@ -43,6 +43,9 @@ import { AnnihilatorPlayground } from "./AnnihilatorPlayground";
 import { TransposePlayground } from "./TransposePlayground";
 import { DoubleDualPlayground } from "./DoubleDualPlayground";
 import { QL1Q1Playground } from "./QL1Q1Playground";
+import { QL2Q1Playground } from "./QL2Q1Playground";
+import { QL4Q1Playground } from "./QL4Q1Playground";
+import { QS1Q1Playground } from "./QS1Q1Playground";
 import { QE5Q1Playground } from "./QE5Q1Playground";
 import type { PlaygroundId } from "@/lib/curriculum";
 
@@ -161,6 +164,12 @@ export function Playground({ id }: { id: PlaygroundId }) {
     // Question-specific playgrounds
     case "q-L1-q1":
       return <QL1Q1Playground />;
+    case "q-L2-q1":
+      return <QL2Q1Playground />;
+    case "q-L4-q1":
+      return <QL4Q1Playground />;
+    case "q-S1-q1":
+      return <QS1Q1Playground />;
     case "q-E5-q1":
       return <QE5Q1Playground />;
 

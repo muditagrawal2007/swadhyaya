@@ -63,7 +63,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "(0, 4)" },
       { id: "d", label: "Never" },
     ],
-    "Set equal: 2x + 1 = -x + 4, so 3x = 3, x = 1. y = 2(1) + 1 = 3."),
+    "Set equal: 2x + 1 = -x + 4, so 3x = 3, x = 1. y = 2(1) + 1 = 3.",
+    "Drag the line slopes and intercepts in the playground — watch the meeting point slide.",
+    10,
+    "q-L2-q1"),
   q("L2", "truefalse",
     "If two lines have the same slope, they meet at exactly one point.",
     [
@@ -93,7 +96,9 @@ export const QUESTIONS: Question[] = [
       { id: "d", label: "[2, 3]" },
     ],
     "First component: 1·1 + 2·1 = 3. Second: 3·1 + 4·1 = 7. So Ax = [3, 7].",
-    "Each row of A is dotted with x. Row 1: 1·1 + 2·1. Row 2: 3·1 + 4·1."),
+    "Each row of A is dotted with x. Row 1: 1·1 + 2·1. Row 2: 3·1 + 4·1.",
+    10,
+    "q-L4-q1"),
   q("L4", "truefalse",
     "Matrix multiplication Ax is the same as applying the linear transformation A to the vector x.",
     [
@@ -481,7 +486,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "LU" },
       { id: "d", label: "AB" },
     ],
-    "SVD: A = U Σ Vᵀ. Always, for any matrix."),
+    "SVD: A = U Σ Vᵀ. Always, for any matrix.",
+    "Drag the rotation and scale sliders in the playground below — the unit circle is rotated, stretched, and rotated again, becoming the ellipse A maps it to.",
+    10,
+    "q-S1-q1"),
 
   // S2
   q("S2", "predict",

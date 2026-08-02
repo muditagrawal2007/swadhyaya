@@ -47,7 +47,7 @@ export type PlaygroundId =
   // the concept-level widget; the Test tab question embeds the q-level one
   // above the options so the student can manipulate the math and observe
   // the answer directly.
-  | "q-L1-q1" | "q-E5-q1";
+  | "q-L1-q1" | "q-L2-q1" | "q-L4-q1" | "q-S1-q1" | "q-E5-q1";
 
 export type QuestionId = string;
 
