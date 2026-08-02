@@ -515,6 +515,102 @@ export const QUESTIONS: Question[] = [
       { id: "d", label: "Random choice" },
     ],
     "PageRank: pages are states, links are transitions, importance = dominant eigenvector of the link matrix. The eigenvector for eigenvalue 1."),
+
+  // ════════════════════════════════════════════════════════════
+  // FILL IN THE MISSING 5 — T2b, F2, F5, E5, E6
+  // Each concept gets 2 questions: one concrete (numeric/algebraic),
+  // one conceptual (true/false or property identification).
+  // ════════════════════════════════════════════════════════════
+
+  // T2b — 3D transformations (3x3 matrices warping space)
+  q("T2b", "predict",
+    "The 3x3 matrix [[1,0,0],[0,2,0],[0,0,3]] sends the unit cube to…",
+    [
+      { id: "a", label: "A box of side lengths 1, 2, 3 (along x, y, z)", correct: true },
+      { id: "b", label: "The same unit cube" },
+      { id: "c", label: "A sphere" },
+      { id: "d", label: "A tetrahedron" },
+    ],
+    "Diagonal entries scale each axis: x unchanged, y doubled, z tripled. The unit cube stretches into a 1×2×3 box."),
+  q("T2b", "truefalse",
+    "A 3x3 matrix can express any 3D linear transformation — including rotations, scalings, shears, and reflections — but NOT translations.",
+    [
+      { id: "a", label: "True", correct: true },
+      { id: "b", label: "False" },
+    ],
+    "Linear maps must fix the origin, so translations (which move it) are not representable by a single 3x3 matrix. You need a 4x4 with the translation in the last column to handle translations — that's the affine trick used in computer graphics."),
+
+  // F2 — Row space and column space
+  q("F2", "predict",
+    "For A (3x4), the row space is a subspace of… and the column space is a subspace of…",
+    [
+      { id: "a", label: "Row ⊂ R⁴, Column ⊂ R³", correct: true },
+      { id: "b", label: "Row ⊂ R³, Column ⊂ R⁴" },
+      { id: "c", label: "Both ⊂ R³" },
+      { id: "d", label: "Both ⊂ R⁴" },
+    ],
+    "Rows of a 3x4 matrix are length-4 vectors → row space lives in R⁴. Columns are length-3 → column space lives in R³. Always: row space ⊂ Rⁿ, column space ⊂ Rᵐ for an m×n matrix."),
+  q("F2", "truefalse",
+    "The row space and the column space of a matrix always have the same dimension.",
+    [
+      { id: "a", label: "True", correct: true },
+      { id: "b", label: "False" },
+    ],
+    "Yes — both have dimension equal to the rank of A. They're different spaces (live in Rⁿ vs Rᵐ) but always the same size. This is the content of the rank theorem."),
+
+  // F5 — Dual basis
+  q("F5", "predict",
+    "In R² with the standard basis {e₁, e₂}, the dual basis is {f₁, f₂} where…",
+    [
+      { id: "a", label: "fᵢ(v) = the i-th coordinate of v", correct: true },
+      { id: "b", label: "fᵢ(v) = the magnitude of v" },
+      { id: "c", label: "fᵢ(v) = the angle of v" },
+      { id: "d", label: "fᵢ(v) = 1 for every v" },
+    ],
+    "The dual basis functionals 'pick out' coordinates: f₁(3, 7) = 3, f₂(3, 7) = 7. That's the bookkeeping job of the dual basis."),
+  q("F5", "truefalse",
+    "Every basis of V has exactly one dual basis of V*.",
+    [
+      { id: "a", label: "True", correct: true },
+      { id: "b", label: "False" },
+    ],
+    "Yes — uniqueness follows from the defining equations fᵢ(vⱼ) = δᵢⱼ. Given {v₁, …, vₙ}, there is a UNIQUE {f₁, …, fₙ} satisfying these n² equations."),
+
+  // E5 — Cayley-Hamilton
+  q("E5", "predict",
+    "For A = [[2, 1], [0, 2]], the characteristic polynomial is p(λ) = λ² - 4λ + 4. What is p(A)?",
+    [
+      { id: "a", label: "The 2x2 zero matrix", correct: true },
+      { id: "b", label: "A = [[2, 1], [0, 2]]" },
+      { id: "c", label: "The identity" },
+      { id: "d", label: "A - 2I" },
+    ],
+    "Cayley-Hamilton: p(A) = A² - 4A + 4I. A² = [[4, 4], [0, 4]], so A² - 4A + 4I = [[4-8+4, 4-4+0], [0, 0-8+4]] = [[0, 0], [0, 0]]. Always zero — that's the theorem."),
+  q("E5", "truefalse",
+    "Cayley-Hamilton says: every matrix is a root of its own characteristic polynomial.",
+    [
+      { id: "a", label: "True", correct: true },
+      { id: "b", label: "False" },
+    ],
+    "Yes — p(A) = 0 (the zero matrix) for ANY square A. Strang calls it 'the most remarkable theorem in linear algebra.' It powers matrix exponentiation: exp(At) can be computed via Cayley-Hamilton without ever forming a Taylor series."),
+
+  // E6 — Minimal polynomial
+  q("E6", "predict",
+    "If A is diagonalizable with distinct eigenvalues λ₁, λ₂, λ₃, what is the minimal polynomial of A?",
+    [
+      { id: "a", label: "(λ - λ₁)(λ - λ₂)(λ - λ₃), with no repeated roots", correct: true },
+      { id: "b", label: "Always (λ - λ₁)³" },
+      { id: "c", label: "λ itself" },
+      { id: "d", label: "A constant, like 7" },
+    ],
+    "For a diagonalizable matrix with distinct eigenvalues, the minimal polynomial equals the characteristic polynomial, with each factor appearing only once (degree 1 in each (λ - λᵢ)). Repeated eigenvalues in a diagonalizable matrix don't increase the minimal polynomial's degree."),
+  q("E6", "truefalse",
+    "The minimal polynomial always divides the characteristic polynomial.",
+    [
+      { id: "a", label: "True", correct: true },
+      { id: "b", label: "False" },
+    ],
+    "Yes — the minimal polynomial divides EVERY polynomial that vanishes on A, including the characteristic polynomial. Same roots (over the algebraic closure), but possibly with lower multiplicities. A matrix is diagonalizable iff its minimal polynomial has no repeated roots."),
 ];
 
 export const QUESTIONS_BY_CONCEPT: Record<string, Question[]> = QUESTIONS.reduce(
