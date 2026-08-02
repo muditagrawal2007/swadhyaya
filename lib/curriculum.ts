@@ -34,7 +34,7 @@ export interface ConceptNode {
 }
 
 export type PlaygroundId =
-  | "lines-2d" | "intersect" | "planes-3d" | "row-ops" | "gaussian" | "rref" | "homogeneous"
+  | "lines-2d-one" | "lines-2d-two" | "intersect" | "planes-3d" | "row-ops" | "gaussian" | "rref" | "homogeneous"
   | "vector-arrow" | "add-scale" | "linear-combination"
   | "span" | "subspace" | "independence" | "basis" | "dimension"
   | "transformation" | "linear-matters" | "transform-3d" | "matrix-cols" | "matrix-times-vec" | "matrix-times-mat"
@@ -70,7 +70,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "Imagine a weighing scale. You put 3 apples on the left and some weight on the right. The equation '3 = w' is the question: what weight makes the scale balance? Every equation is that question — find the value where the two sides match. Draw y = 2x + 1 on a graph. Now ask: at x = 0, what is y? The equation answers: y = 1. The graph shows that point.",
     prereqs: [],
     xp: 10,
-    playground: "lines-2d",
+    playground: "lines-2d-one",
     questions: ["L1-q1", "L1-q2"],
     whyCare: "Every physics equation (F=ma, E=mc²) is an equation. Every business calculation (price × quantity = revenue) is one. Equations are how the world answers questions.",
     strang: "Strang §1.1 — the geometry of linear equations. The first three pages of his book.",
@@ -82,7 +82,7 @@ export const CONCEPTS: ConceptNode[] = [
     story: "Atul's house is at the origin. He walks 2 units east, then 1 unit north, to reach Bala's house. Then he turns right (east) for 1 unit, then left (north) for 1 unit, reaching Chetan. Right 1, left 1, reaching Divya. Are Bala, Chetan, Divya on a straight line? The line y = x + 0. They are. This is one equation with one story.",
     prereqs: ["L1"],
     xp: 15,
-    playground: "lines-2d",
+    playground: "lines-2d-two",
     questions: ["L2-q1", "L2-q2"],
   },
   {

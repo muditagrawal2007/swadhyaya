@@ -1,7 +1,8 @@
 "use client";
 import dynamic from "next/dynamic";
 import { MatrixColumnsPlayground } from "./MatrixColumnsPlayground";
-import { LinePlayground } from "./LinePlayground";
+import { OneLinePlayground } from "./OneLinePlayground";
+import { TwoLinesPlayground } from "./TwoLinesPlayground";
 import { RREFPlayground } from "./RREFPlayground";
 import { VectorArrowPlayground } from "./VectorArrowPlayground";
 import { AddScalePlayground } from "./AddScalePlayground";
@@ -46,14 +47,16 @@ import type { PlaygroundId } from "@/lib/curriculum";
 export function Playground({ id }: { id: PlaygroundId }) {
   switch (id) {
     // Phase 1 — Systems of Linear Equations
-    case "lines-2d":
-      return <LinePlayground />;
+    case "lines-2d-one":
+      return <OneLinePlayground />;
+    case "lines-2d-two":
+      return <TwoLinesPlayground />;
     case "intersect":
       return <IntersectPlayground />;
     case "planes-3d":
       return <Planes3DPlayground />;
     case "matrix-times-vec":
-      return <LinePlayground />; // legacy alias
+      return <OneLinePlayground />; // legacy alias
     case "row-ops":
       return <RowOpsPlayground />;
     case "gaussian":
