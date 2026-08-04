@@ -6,7 +6,6 @@ import {
   CONCEPT_BY_ID,
   PHASES,
   getNextConceptId,
-  getPrevConceptId,
   getUnlocked,
   type ConceptId,
 } from "@/lib/curriculum";
@@ -15,7 +14,7 @@ import { QUESTIONS_BY_CONCEPT, type Question } from "@/lib/questions";
 import { Playground } from "@/components/playground/Playground";
 import { QuestionCard } from "@/components/question/QuestionCard";
 import { QuestionNav } from "@/components/question/QuestionNav";
-import { Lock, Check, Sparkles, ArrowLeft, ArrowRight } from "lucide-react";
+import { Lock, Check, Sparkles, ArrowLeft, ArrowRight, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const fireConfetti = async () => {
@@ -36,7 +35,7 @@ const fireConfetti = async () => {
   });
 };
 
-type Tab = "story" | "play" | "test" | "connect";
+type Tab = "story" | "play" | "test";
 
 export function ConceptPage({ id }: { id: ConceptId }) {
   const router = useRouter();
@@ -66,7 +65,6 @@ export function ConceptPage({ id }: { id: ConceptId }) {
         "1": "story",
         "2": "play",
         "3": "test",
-        "4": concept.prereqs.length > 0 ? "connect" : "",
       };
       const next = map[e.key];
       if (next) {
@@ -78,7 +76,7 @@ export function ConceptPage({ id }: { id: ConceptId }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [concept.prereqs.length, router]);
+  }, [router]);
 
   const phaseMeta = useMemo(
     () => PHASES.find((p) => p.id === concept.phase)!,
@@ -86,14 +84,9 @@ export function ConceptPage({ id }: { id: ConceptId }) {
   );
 
   const nextId = useMemo(() => getNextConceptId(concept.id), [concept.id]);
-  const prevId = useMemo(() => getPrevConceptId(concept.id), [concept.id]);
   const nextConcept = nextId ? CONCEPT_BY_ID[nextId] : null;
-  const prevConcept = prevId ? CONCEPT_BY_ID[prevId] : null;
   const nextUnlocked = nextId
     ? getUnlocked(new Set(completed)).has(nextId)
-    : false;
-  const prevUnlocked = prevId
-    ? getUnlocked(new Set(completed)).has(prevId)
     : false;
 
   if (!isUnlocked) {
@@ -149,54 +142,20 @@ export function ConceptPage({ id }: { id: ConceptId }) {
       </Link>
 
       <header className="mb-6">
-        <div className="flex items-center justify-between gap-4 mb-2 flex-wrap">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span
-              className="text-[10px] font-mono px-1.5 py-0.5 rounded"
-              style={{ background: `${phaseMeta.color}20`, color: phaseMeta.color }}
-            >
-              {concept.id}
-            </span>
-            <span className="text-[10px] text-faint uppercase tracking-wider">
-              Phase {concept.phase} · {phaseMeta.title}
-            </span>
-            <span className="text-[10px] text-faint" aria-hidden="true">
-              ·
-            </span>
-            <span className="text-[10px] text-warn">+{concept.xp} XP</span>
-          </div>
-          <div className="flex items-center gap-1">
-            {prevConcept && (
-              <Link
-                href={`/learn/${prevConcept.id}`}
-                className={cn(
-                  "inline-flex items-center gap-1 text-xs px-2 py-1 rounded border transition",
-                  prevUnlocked
-                    ? "border-line hover:bg-elev text-dim hover:text-ink"
-                    : "border-line/50 text-faint hover:text-dim",
-                )}
-                aria-label={`Previous story: ${prevConcept.title}`}
-              >
-                <ArrowLeft size={12} aria-hidden="true" />
-                <span className="font-mono text-[10px]">{prevConcept.id}</span>
-              </Link>
-            )}
-            {nextConcept && (
-              <Link
-                href={`/learn/${nextConcept.id}`}
-                className={cn(
-                  "inline-flex items-center gap-1 text-xs px-2 py-1 rounded border transition",
-                  nextUnlocked
-                    ? "border-accent/40 bg-accent/10 text-accent hover:bg-accent/20"
-                    : "border-line/50 text-faint hover:text-dim",
-                )}
-                aria-label={`Next story: ${nextConcept.title}`}
-              >
-                <span className="font-mono text-[10px]">{nextConcept.id}</span>
-                <ArrowRight size={12} aria-hidden="true" />
-              </Link>
-            )}
-          </div>
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <span
+            className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+            style={{ background: `${phaseMeta.color}20`, color: phaseMeta.color }}
+          >
+            {concept.id}
+          </span>
+          <span className="text-[10px] text-faint uppercase tracking-wider">
+            Phase {concept.phase} · {phaseMeta.title}
+          </span>
+          <span className="text-[10px] text-faint" aria-hidden="true">
+            ·
+          </span>
+          <span className="text-[10px] text-warn">+{concept.xp} XP</span>
         </div>
         <h1 className="font-serif text-3xl text-ink">{concept.title}</h1>
         <p className="mt-1 text-base text-dim">{concept.short}</p>
@@ -231,16 +190,6 @@ export function ConceptPage({ id }: { id: ConceptId }) {
         >
           Test
         </TabButton>
-        {concept.prereqs.length > 0 && (
-          <TabButton
-            active={tab === "connect"}
-            onClick={() => setTab("connect")}
-            n={4}
-            id="tab-connect"
-          >
-            Connect
-          </TabButton>
-        )}
         {puzzleSolved && (
           <span className="ml-auto inline-flex items-center gap-1 text-xs text-accent">
             <Check size={12} aria-hidden="true" /> Locked in
@@ -248,7 +197,7 @@ export function ConceptPage({ id }: { id: ConceptId }) {
         )}
         <span className="ml-auto hidden lg:inline-flex items-center gap-2 text-[10px] text-faint font-mono">
           <kbd className="px-1.5 py-0.5 rounded border border-line bg-elev/50">
-            1–4
+            1–3
           </kbd>
           tabs
           <kbd className="px-1.5 py-0.5 rounded border border-line bg-elev/50 ml-1">
@@ -260,13 +209,6 @@ export function ConceptPage({ id }: { id: ConceptId }) {
 
       {tab === "story" && <StoryTab story={concept.story} />}
       {tab === "play" && <Playground id={concept.playground} />}
-      {tab === "connect" && (
-        <ConnectTab
-          prereqs={concept.prereqs}
-          currentId={concept.id}
-          completed={completed}
-        />
-      )}
       {tab === "test" && (
         <TestTab
           questions={questions}
@@ -289,6 +231,12 @@ export function ConceptPage({ id }: { id: ConceptId }) {
           }
           nextUnlocked={nextUnlocked}
           onGoToNext={() => router.push(`/learn/${nextConcept?.id}`)}
+          onRetake={() => {
+            // Force the student to re-watch the story & play with the
+            // playground before retaking. Reset all answers and switch
+            // to the story tab.
+            setTab("story");
+          }}
         />
       )}
     </div>
@@ -353,76 +301,9 @@ function StoryTab({ story }: { story: string }) {
   );
 }
 
-function ConnectTab({
-  prereqs,
-  currentId: _currentId,
-  completed,
-}: {
-  prereqs: ConceptId[];
-  currentId: ConceptId;
-  completed: ConceptId[];
-}) {
-  const prereqConcepts = useMemo(
-    () =>
-      prereqs
-        .map((id) => CONCEPT_BY_ID[id])
-        .filter(
-          (c): c is (typeof CONCEPT_BY_ID)[ConceptId] => c !== undefined,
-        ),
-    [prereqs],
-  );
-  return (
-    <div className="space-y-4">
-      <div className="bg-card border border-line rounded-xl p-6">
-        <div className="text-[10px] text-faint uppercase tracking-wider mb-3">
-          This concept rests on
-        </div>
-        <div className="space-y-2">
-          {prereqConcepts.length === 0 ? (
-            <p className="text-sm text-dim">
-              This is a starting concept — no prerequisites.
-            </p>
-          ) : (
-            prereqConcepts.map((c) => {
-              const done = completed.includes(c.id);
-              return (
-                <Link
-                  key={c.id}
-                  href={`/learn/${c.id}`}
-                  className={`flex items-center gap-3 p-3 rounded-lg border transition ${
-                    done
-                      ? "border-accent/30 bg-accent/5 hover:bg-accent/10"
-                      : "border-line bg-elev/30 hover:bg-elev/60"
-                  }`}
-                >
-                  <span
-                    className="text-[10px] font-mono px-1.5 py-0.5 rounded"
-                    style={{
-                      background: "var(--bg-elev)",
-                      color: done ? "var(--accent)" : "var(--ink-dim)",
-                    }}
-                  >
-                    {c.id}
-                  </span>
-                  <span className="text-sm text-ink flex-1">{c.title}</span>
-                  {done ? (
-                    <span className="text-[10px] text-accent">✓ locked in</span>
-                  ) : (
-                    <span className="text-[10px] text-faint">review</span>
-                  )}
-                </Link>
-              );
-            })
-          )}
-        </div>
-      </div>
-      <div className="bg-elev/40 border border-line rounded-xl p-4 text-xs text-dim leading-relaxed">
-        The curriculum is a directed graph: each concept unlocks the next. The
-        chain never breaks. Every concept is downstream of everything above it.
-      </div>
-    </div>
-  );
-}
+// Minimum score to advance to the next story. Below this the student
+// must re-watch the story / play with the playground before retaking.
+const PASS_THRESHOLD = 0.7;
 
 function TestTab({
   questions,
@@ -431,6 +312,7 @@ function TestTab({
   nextConcept,
   nextUnlocked,
   onGoToNext,
+  onRetake,
 }: {
   questions: Question[];
   onPass: () => void;
@@ -444,6 +326,7 @@ function TestTab({
   } | null;
   nextUnlocked: boolean;
   onGoToNext: () => void;
+  onRetake: () => void;
 }) {
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -468,8 +351,10 @@ function TestTab({
   const q = questions[idx];
   if (!q) return null;
   const answeredCount = Object.keys(submitted).length;
-  const allCorrect =
-    answeredCount === questions.length && correctCount === questions.length;
+  const finished = answeredCount === questions.length;
+  const scorePct = finished ? (correctCount / questions.length) * 100 : 0;
+  const passed = finished && scorePct >= PASS_THRESHOLD * 100;
+  const needed = Math.ceil(PASS_THRESHOLD * questions.length);
 
   const handleCheck = () => {
     const chosenId = answers[q.id];
@@ -494,6 +379,16 @@ function TestTab({
     setSubmitted(newSub);
   };
 
+  const handleFullReset = () => {
+    setIdx(0);
+    setAnswers({});
+    setSubmitted({});
+    setCorrectMap({});
+    setShowHint({});
+    setWrongAttempts({});
+    onRetake();
+  };
+
   return (
     <div className="grid md:grid-cols-[1fr_240px] gap-6">
       <div>
@@ -514,27 +409,58 @@ function TestTab({
           onNext={() => setIdx(idx + 1)}
         />
 
-        {allCorrect && (
+        {finished && (
           <div
             className={cn(
               "mt-6 rounded-2xl p-8 text-center transition",
-              nextUnlocked
+              passed
                 ? "bg-gradient-to-b from-accent/15 via-accent/10 to-card border border-accent/40 shadow-[0_0_24px_-12px_var(--accent)]"
-                : "bg-accent/10 border border-accent/40",
+                : "bg-warn/10 border border-warn/40",
             )}
           >
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-accent/20 border border-accent/40">
-              <Sparkles size={22} className="text-accent" aria-hidden="true" />
+            <div
+              className={cn(
+                "inline-flex items-center justify-center w-12 h-12 rounded-full border",
+                passed
+                  ? "bg-accent/20 border-accent/40"
+                  : "bg-warn/20 border-warn/40",
+              )}
+            >
+              {passed ? (
+                <Sparkles
+                  size={22}
+                  className="text-accent"
+                  aria-hidden="true"
+                />
+              ) : (
+                <RotateCcw
+                  size={22}
+                  className="text-warn"
+                  aria-hidden="true"
+                />
+              )}
             </div>
+
             <h3 className="mt-3 font-serif text-2xl text-ink">
-              All correct — locked in
+              {passed
+                ? "Passed — locked in"
+                : "Below the 70% threshold"}
             </h3>
             <p className="text-sm text-dim mt-1">
-              +{questions.reduce((s, qq) => s + qq.xp, 0)} XP earned across{" "}
-              {questions.length} questions
+              You scored{" "}
+              <span
+                className={cn(
+                  "font-mono font-semibold",
+                  passed ? "text-accent" : "text-warn",
+                )}
+              >
+                {correctCount}/{questions.length}
+              </span>{" "}
+              ({Math.round(scorePct)}%) — need at least {needed}/{questions.length}{" "}
+              ({Math.round(PASS_THRESHOLD * 100)}%) to continue.
             </p>
 
-            {nextConcept && (
+            {passed && nextConcept && (
               <div className="mt-5 mx-auto max-w-md">
                 <div className="text-[10px] text-faint uppercase tracking-widest mb-1.5">
                   Next story
@@ -575,44 +501,56 @@ function TestTab({
             )}
 
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-              {nextConcept &&
-                (alreadyDone ? (
-                  <Link
-                    href={`/learn/${nextConcept.id}`}
-                    className={cn(
-                      "px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2 transition text-base",
-                      nextUnlocked
-                        ? "bg-ink text-canvas hover:opacity-90 shadow-lg"
-                        : "border border-line bg-elev/40 text-dim hover:bg-elev",
-                    )}
-                  >
-                    {nextUnlocked
-                      ? "Continue to next story"
-                      : "Preview next story"}
-                    <ArrowRight size={16} aria-hidden="true" />
-                  </Link>
-                ) : (
+              {passed ? (
+                <>
+                  {nextConcept &&
+                    (alreadyDone ? (
+                      <Link
+                        href={`/learn/${nextConcept.id}`}
+                        className={cn(
+                          "px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2 transition text-base",
+                          nextUnlocked
+                            ? "bg-ink text-canvas hover:opacity-90 shadow-lg"
+                            : "border border-line bg-elev/40 text-dim hover:bg-elev",
+                        )}
+                      >
+                        {nextUnlocked
+                          ? "Continue to next story"
+                          : "Preview next story"}
+                        <ArrowRight size={16} aria-hidden="true" />
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          onPass();
+                          onGoToNext();
+                        }}
+                        className="px-6 py-3 rounded-lg bg-ink text-canvas font-semibold inline-flex items-center gap-2 hover:opacity-90 transition text-base shadow-lg"
+                      >
+                        Continue to next story
+                        <ArrowRight size={16} aria-hidden="true" />
+                      </button>
+                    ))}
                   <button
-                    onClick={() => {
-                      onPass();
-                      onGoToNext();
-                    }}
-                    className="px-6 py-3 rounded-lg bg-ink text-canvas font-semibold inline-flex items-center gap-2 hover:opacity-90 transition text-base shadow-lg"
+                    onClick={onPass}
+                    disabled={alreadyDone}
+                    className="px-4 py-2 rounded text-xs border border-line/50 text-dim hover:bg-elev disabled:opacity-40"
                   >
-                    Continue to next story
-                    <ArrowRight size={16} aria-hidden="true" />
+                    {alreadyDone ? "Already locked in" : "Mark complete only"}
                   </button>
-                ))}
-              <button
-                onClick={onPass}
-                disabled={alreadyDone}
-                className="px-4 py-2 rounded text-xs border border-line/50 text-dim hover:bg-elev disabled:opacity-40"
-              >
-                {alreadyDone ? "Already locked in" : "Mark complete only"}
-              </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleFullReset}
+                  className="px-6 py-3 rounded-lg bg-ink text-canvas font-semibold inline-flex items-center gap-2 hover:opacity-90 transition text-base shadow-lg"
+                >
+                  Re-study the story & retake the test
+                  <ArrowLeft size={16} aria-hidden="true" />
+                </button>
+              )}
             </div>
 
-            {!nextConcept && (
+            {passed && !nextConcept && (
               <p className="mt-4 text-xs text-accent font-medium">
                 You finished the entire curriculum. ✦
               </p>
