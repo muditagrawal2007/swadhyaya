@@ -82,7 +82,7 @@ export function TransformationPlayground() {
             <Slider label="y" value={target.y} min={-4} max={4} step={0.1} onChange={(y) => setTarget({ x: target.x, y })} />
             <div className="mt-3 text-xs text-dim leading-relaxed">
               You are the transformation. Drag to choose where the input point lands.
-              This is a "point" map — not a function (yet).
+              This is a &ldquo;point&rdquo; map — not a function (yet).
             </div>
           </div>
         ) : (
@@ -100,7 +100,7 @@ export function TransformationPlayground() {
               ))}
             </div>
             <div className="mt-3 text-xs text-dim leading-relaxed">
-              The same rule applied to every point. Notice: the grid stays a grid (rotated / scaled / sheared, but still a grid). That's what "well-behaved" means.
+              The same rule applied to every point. Notice: the grid stays a grid (rotated / scaled / sheared, but still a grid). That&apos;s what &ldquo;well-behaved&rdquo; means.
             </div>
           </div>
         )}

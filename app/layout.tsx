@@ -1,10 +1,32 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { DM_Sans, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import { TopNav } from "@/components/chrome/TopNav";
 import { SideRail } from "@/components/chrome/SideRail";
 import { MobileNav } from "@/components/chrome/MobileNav";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-dm-sans",
+});
+
+const sourceSerif = Source_Serif_4({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-source-serif",
+});
+
+function safeAppUrl() {
+  const raw = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  try {
+    return new URL(raw).toString();
+  } catch {
+    return "http://localhost:3000";
+  }
+}
+
+const APP_URL = safeAppUrl();
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Swadhyaya";
 const APP_DESCRIPTION =
   "Learn linear algebra by playing. From a number on a line to SVD, eigen, and PCA — see it, drag it, discover the formula. No memorization, no jargon.";
@@ -62,18 +84,32 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: "#1a1614",
+  width: "device-width",
+  initialScale: 1,
+  colorScheme: "dark",
+};
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${dmSans.variable} ${sourceSerif.variable}`}>
       <body className="bg-canvas text-ink min-h-screen">
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <TopNav />
         <div className="flex">
           <SideRail />
-          <main className="flex-1 min-h-[calc(100vh-56px)] pb-14 md:pb-0">
+          <main
+            id="main-content"
+            className="flex-1 min-h-[calc(100vh-56px)] pb-14 md:pb-0"
+            aria-label="Main content"
+          >
             {children}
           </main>
         </div>

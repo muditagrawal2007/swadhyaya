@@ -16,13 +16,20 @@ declare module "canvas-confetti" {
     disableForReducedMotion?: boolean;
   }
 
-  function confetti(options?: Options | ((canvas: HTMLCanvasElement) => Options)): Promise<unknown>;
-  function create(canvas: HTMLCanvasElement, options?: { resize?: boolean; useWorker?: boolean; disableForReducedMotion?: boolean }): {
+  function confetti(
+    options?: Options | ((canvas: HTMLCanvasElement) => Options),
+  ): Promise<unknown>;
+  function create(
+    canvas: HTMLCanvasElement,
+    options?: {
+      resize?: boolean;
+      useWorker?: boolean;
+      disableForReducedMotion?: boolean;
+    },
+  ): {
     (options?: Options): Promise<unknown>;
     reset: () => void;
   };
-  function shapeFromPath(pathData: string): Promise<Path2D>;
-  function shapeFromText(text: string): Promise<Path2D>;
   const defaults: Options;
 
   export default confetti;

@@ -1,7 +1,16 @@
 import type { MetadataRoute } from "next";
 import { CONCEPTS } from "@/lib/curriculum";
 
-const BASE = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+function safeBase() {
+  const raw = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  try {
+    return new URL(raw).toString().replace(/\/$/, "");
+  } catch {
+    return "http://localhost:3000";
+  }
+}
+
+const BASE = safeBase();
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -17,6 +26,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.9,
+    },
+    {
+      url: `${BASE}/leaderboard`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.5,
     },
     {
       url: `${BASE}/about`,

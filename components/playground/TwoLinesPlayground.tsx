@@ -56,7 +56,7 @@ export function TwoLinesPlayground() {
         </div>
         <div className="bg-card border border-line rounded-xl p-4">
           <div className="text-[10px] text-faint uppercase tracking-wider mb-2" style={{ color: "var(--matrix)" }}>Line 2</div>
-          <div className="font-mono text-lg text-matrix mb-2">y = {m2.toFixed(2)}x + {m2.toFixed(2) === "0.00" ? c2.toFixed(2) : c2.toFixed(2)}</div>
+          <div className="font-mono text-lg text-matrix mb-2">y = {m2.toFixed(2)}x + {c2.toFixed(2)}</div>
           <Slider label="m" value={m2} min={-3} max={3} step={0.05} onChange={setM2} />
           <Slider label="c" value={c2} min={-5} max={5} step={0.1} onChange={setC2} />
         </div>

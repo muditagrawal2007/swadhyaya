@@ -30,7 +30,32 @@ const q = (
   hint: string = "Re-read the playground carefully.",
   xp: number = 10,
   playground?: string,
-): Question => ({ id: `${conceptId}-${++_qid}`, conceptId, type, prompt, options, explanation, hint, xp, playground });
+): Question => {
+  // Build-time validation: every question must have at least one option
+  // and exactly one option flagged as correct.
+  const correctCount = options.filter((o) => o.correct).length;
+  if (options.length < 2) {
+    throw new Error(
+      `Question for ${conceptId} needs at least 2 options, got ${options.length}`,
+    );
+  }
+  if (correctCount !== 1) {
+    throw new Error(
+      `Question for ${conceptId} must have exactly 1 correct option, got ${correctCount}`,
+    );
+  }
+  return {
+    id: `${conceptId}-${++_qid}`,
+    conceptId,
+    type,
+    prompt,
+    options,
+    explanation,
+    hint,
+    xp,
+    playground,
+  };
+};
 
 export const QUESTIONS: Question[] = [
   // L1
@@ -73,7 +98,10 @@ export const QUESTIONS: Question[] = [
       { id: "a", label: "True" },
       { id: "b", label: "False", correct: true },
     ],
-    "Parallel lines (same slope, different intercept) never meet. They have no point in common."),
+    "Parallel lines (same slope, different intercept) never meet. They have no point in common.",
+    "Drag the two slopes in the playground below — make them equal.",
+    10,
+    "q-L2-q2"),
 
   // L3
   q("L3", "predict",
@@ -84,7 +112,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "Always infinite solutions" },
       { id: "d", label: "Never a solution" },
     ],
-    "Three planes in 3D can meet at a point (one solution), be inconsistent (none), or share a line/plane (infinite)."),
+    "Three planes in 3D can meet at a point (one solution), be inconsistent (none), or share a line/plane (infinite).",
+    "Re-read the playground carefully.",
+    10,
+    "q-L3-q1"),
 
   // L4
   q("L4", "predict",
@@ -116,7 +147,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "Multiply a row by 0" },
       { id: "d", label: "Reorder the unknowns" },
     ],
-    "Swap, scale (by non-zero), and add-multiple are the three valid row operations."),
+    "Swap, scale (by non-zero), and add-multiple are the three valid row operations.",
+    "Try each operation in the playground below — green ones preserve the solution.",
+    10,
+    "q-L5-q1"),
 
   // L6
   q("L6", "predict",
@@ -127,7 +161,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "Random" },
       { id: "d", label: "All in the last row" },
     ],
-    "Echelon = staircase. Pivots go right as you go down, all entries below each pivot are zero."),
+    "Echelon = staircase. Pivots go right as you go down, all entries below each pivot are zero.",
+    "Edit the matrix in the playground below — pivots light up in the echelon form.",
+    10,
+    "q-L6-q1"),
   q("L6", "truefalse",
     "Every system of linear equations has a unique row-echelon form.",
     [
@@ -143,7 +180,10 @@ export const QUESTIONS: Question[] = [
       { id: "a", label: "True", correct: true },
       { id: "b", label: "False" },
     ],
-    "Yes — RREF is the unique reduced form. Two different paths to RREF will give the same final matrix."),
+    "Yes — RREF is the unique reduced form. Two different paths to RREF will give the same final matrix.",
+    "Try the two paths in the playground below — they always agree.",
+    10,
+    "q-L7-q1"),
 
   // L8
   q("L8", "predict",
@@ -154,7 +194,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "No solution" },
       { id: "d", label: "It depends on A" },
     ],
-    "x = 0 always satisfies Ax = 0. The question is whether OTHER (non-trivial) solutions exist."),
+    "x = 0 always satisfies Ax = 0. The question is whether OTHER (non-trivial) solutions exist.",
+    "Drop probes in the playground below — green ones are in the null space.",
+    10,
+    "q-L8-q1"),
   q("L8", "truefalse",
     "A non-homogeneous system Ax = b with b ≠ 0 always has exactly one solution.",
     [
@@ -172,7 +215,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "They look the same" },
       { id: "d", label: "They end at the same point" },
     ],
-    "Vectors are about direction and magnitude, not position. Slide them around — same vector."),
+    "Vectors are about direction and magnitude, not position. Slide them around — same vector.",
+    "Drag the two arrows in the playground below — make them the same vector.",
+    10,
+    "q-V1-q1"),
   q("V1", "truefalse",
     "The vector from (1,1) to (3,5) is the same as the vector (2,4).",
     [
@@ -190,7 +236,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "(1, 1)" },
       { id: "d", label: "(4, 2)" },
     ],
-    "Add components: (1+3, 2+1) = (4, 3). Head-to-tail: walk v then walk w."),
+    "Add components: (1+3, 2+1) = (4, 3). Head-to-tail: walk v then walk w.",
+    "Drag the tips of v and w in the playground below — see the sum update.",
+    10,
+    "q-V2-q1"),
   q("V2", "predict",
     "3 × (1, 2) = ?",
     [
@@ -199,7 +248,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "(1, 6)" },
       { id: "d", label: "(3, 2)" },
     ],
-    "Scale each component: (3·1, 3·2) = (3, 6)."),
+    "Scale each component: (3·1, 3·2) = (3, 6).",
+    "Drag the scalar slider in the playground below.",
+    10,
+    "q-V2-q2"),
 
   // V3
   q("V3", "truefalse",
@@ -219,7 +271,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "A circle" },
       { id: "d", label: "A square" },
     ],
-    "A line through origin: closed under add and scale. A line not through origin: scaling by 0 takes you to origin, but the line doesn't contain origin, so not closed."),
+    "A line through origin: closed under add and scale. A line not through origin: scaling by 0 takes you to origin, but the line doesn't contain origin, so not closed.",
+    "Pick each shape in the playground below — see which one passes the closure test.",
+    10,
+    "q-V4-q1"),
 
   // V5
   q("V5", "predict",
@@ -230,7 +285,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "Just the origin" },
       { id: "d", label: "A plane in R³" },
     ],
-    "Two non-parallel vectors in R² already span all of R². Adding a third (in R²) doesn't expand it."),
+    "Two non-parallel vectors in R² already span all of R². Adding a third (in R²) doesn't expand it.",
+    "Drag the test point — green if it's in span, red if not.",
+    10,
+    "q-V5-q1"),
 
   // V6
   q("V6", "predict",
@@ -241,7 +299,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "They point the same way" },
       { id: "d", label: "They both pass through origin" },
     ],
-    "If they're parallel, one is a scalar multiple of the other → dependent. If not, independent."),
+    "If they're parallel, one is a scalar multiple of the other → dependent. If not, independent.",
+    "Drag the two vectors in the playground below — watch the parallelogram area.",
+    10,
+    "q-V6-q1"),
 
   // V7
   q("V7", "truefalse",
@@ -261,7 +322,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "At least 4" },
       { id: "d", label: "Could be anything" },
     ],
-    "Dimension is the size of any basis. All bases have the same size. So dimension = 4."),
+    "Dimension is the size of any basis. All bases have the same size. So dimension = 4.",
+    "Add vectors in the playground below — the dimension counts independent ones only.",
+    10,
+    "q-V8-q1"),
 
   // T1
   q("T1", "truefalse",
@@ -281,7 +345,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "T(v)²" },
       { id: "d", label: "T(v)/2" },
     ],
-    "T(cv) = cT(v) is one of the two linearity rules. Scaling the input scales the output by the same amount."),
+    "T(cv) = cT(v) is one of the two linearity rules. Scaling the input scales the output by the same amount.",
+    "Drag v and the scalar slider in the playground below — both paths give the same answer.",
+    10,
+    "q-T2-q1"),
 
   // T3
   q("T3", "predict",
@@ -292,7 +359,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "[[0, 2], [3, 0]]" },
       { id: "d", label: "[[3, 0], [0, 2]]" },
     ],
-    "The columns of the matrix ARE T(i) and T(j). So col 1 = (2, 0), col 2 = (0, 3)."),
+    "The columns of the matrix ARE T(i) and T(j). So col 1 = (2, 0), col 2 = (0, 3).",
+    "Drag î and ĵ to wherever T sends them — the matrix updates.",
+    10,
+    "q-T3-q1"),
 
   // T4
   q("T4", "predict",
@@ -303,7 +373,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "Just the origin" },
       { id: "d", label: "Nothing" },
     ],
-    "Setting T(x,y) = 0: x + 2y = 0 → x = -2y → all vectors (-2y, y) = y(-2, 1). The line 2y + x = 0."),
+    "Setting T(x,y) = 0: x + 2y = 0 → x = -2y → all vectors (-2y, y) = y(-2, 1). The line 2y + x = 0.",
+    "Drag the probe in the playground below — green when T sends it to 0.",
+    10,
+    "q-T4-q1"),
 
   // T5
   q("T5", "predict",
@@ -314,7 +387,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "2" },
       { id: "d", label: "10" },
     ],
-    "rank + nullity = 5. nullity = 2, so rank = 3."),
+    "rank + nullity = 5. nullity = 2, so rank = 3.",
+    "Drag the nullity slider in the playground below — rank updates live.",
+    10,
+    "q-T5-q1"),
 
   // T6
   q("T6", "truefalse",
@@ -334,7 +410,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "[[2, 0], [2, 2]]" },
       { id: "d", label: "[[2, 0], [0, 2]]" },
     ],
-    "BA = [[2·1+0·0, 2·1+0·1], [0·1+2·0, 0·1+2·1]] = [[2, 2], [0, 2]]."),
+    "BA = [[2·1+0·0, 2·1+0·1], [0·1+2·0, 0·1+2·1]] = [[2, 2], [0, 2]].",
+    "Step through BA cell by cell in the playground below.",
+    10,
+    "q-T7-q1"),
   q("T7", "truefalse",
     "Matrix multiplication is commutative: AB = BA always.",
     [
@@ -352,7 +431,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "[[4, -2], [-2, 1]]" },
       { id: "d", label: "Identity" },
     ],
-    "det(A) = 1·4 - 2·2 = 0. det = 0 means A collapses a dimension — no inverse exists."),
+    "det(A) = 1·4 - 2·2 = 0. det = 0 means A collapses a dimension — no inverse exists.",
+    "Drag î and ĵ in the playground until they line up — the determinant goes to zero.",
+    10,
+    "q-T8-q1"),
   q("T8", "truefalse",
     "If A is invertible, then A collapses no dimensions.",
     [
@@ -437,7 +519,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "(1, 2)" },
       { id: "d", label: "(0, 1)" },
     ],
-    "A·(1,0) = (2, 0) = 2·(1, 0). Yes, (1, 0) is an eigenvector with eigenvalue 2."),
+    "A·(1,0) = (2, 0) = 2·(1, 0). Yes, (1, 0) is an eigenvector with eigenvalue 2.",
+    "Drag v until it stops rotating (Mv lines up with v).",
+    10,
+    "q-E1-q1"),
   q("E1", "truefalse",
     "Every vector is an eigenvector of some matrix.",
     [
@@ -455,7 +540,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "0" },
       { id: "d", label: "1" },
     ],
-    "λ = -2. The vector is flipped and stretched by 2."),
+    "λ = -2. The vector is flipped and stretched by 2.",
+    "Drag λ in the playground below — see what negative does to v.",
+    10,
+    "q-E2-q1"),
 
   // E3
   q("E3", "predict",
@@ -466,7 +554,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "9" },
       { id: "d", label: "1" },
     ],
-    "Degree = n for an n×n matrix. So degree 3."),
+    "Degree = n for an n×n matrix. So degree 3.",
+    "Pick 2×2, 3×3, 4×4 in the playground below — the polynomial degree changes with size.",
+    10,
+    "q-E3-q1"),
 
   // E4
   q("E4", "truefalse",
@@ -500,7 +591,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "The same vectors" },
       { id: "d", label: "Eigenvectors of A" },
     ],
-    "U and V are orthogonal matrices. Their columns are orthonormal — perpendicular unit vectors."),
+    "U and V are orthogonal matrices. Their columns are orthonormal — perpendicular unit vectors.",
+    "Slide k in the image preview — see how few columns capture most of the image.",
+    10,
+    "q-S2-q1"),
 
   // S3
   q("S3", "predict",
@@ -511,7 +605,10 @@ export const QUESTIONS: Question[] = [
       { id: "c", label: "Either -1 or +1" },
       { id: "d", label: "Complex" },
     ],
-    "Singular values are √(eigenvalues of AᵀA) — and eigenvalues of positive semi-definite matrices are non-negative."),
+    "Singular values are √(eigenvalues of AᵀA) — and eigenvalues of positive semi-definite matrices are non-negative.",
+    "Drag the matrix in the playground below — singular values stay non-negative.",
+    10,
+    "q-S3-q1"),
 
   // S4
   q("S4", "truefalse",

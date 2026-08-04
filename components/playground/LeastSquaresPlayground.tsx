@@ -3,12 +3,31 @@ import { useState, useMemo } from "react";
 import { VectorCanvas } from "@/components/viz/VectorCanvas";
 import { Slider } from "./Slider";
 
-// Generate noisy linear data
-function generateData(slope: number, intercept: number, noise: number, N: number = 20): Array<[number, number]> {
+// Deterministic PRNG so SSR/CSR agree (avoids hydration mismatch warnings).
+function mulberry32(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Generate noisy linear data with a deterministic noise pattern.
+function generateData(
+  slope: number,
+  intercept: number,
+  noise: number,
+  seed: number,
+  N: number = 20,
+): Array<[number, number]> {
+  const rng = mulberry32(seed);
   const points: Array<[number, number]> = [];
   for (let i = 0; i < N; i++) {
     const x = -3 + (i / (N - 1)) * 6;
-    const y = slope * x + intercept + (Math.random() - 0.5) * noise;
+    const y = slope * x + intercept + (rng() - 0.5) * noise;
     points.push([x, y]);
   }
   return points;
@@ -33,7 +52,10 @@ export function LeastSquaresPlayground() {
   const [trueC, setTrueC] = useState(0.3);
   const [noise, setNoise] = useState(0.8);
   const [seed, setSeed] = useState(0);
-  const data = useMemo(() => generateData(trueM, trueC, noise), [trueM, trueC, noise, seed]);
+  const data = useMemo(
+    () => generateData(trueM, trueC, noise, seed),
+    [trueM, trueC, noise, seed],
+  );
   const fit = useMemo(() => leastSquares(data), [data]);
 
   return (

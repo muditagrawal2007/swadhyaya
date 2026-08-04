@@ -1,5 +1,6 @@
 // Pure functional math for linear algebra visualization.
-// All operations return NEW objects (no mutation). Tested by tests/math/*.test.ts
+// All operations return NEW objects (no mutation in user-visible types).
+// Tested by tests/math.test.ts.
 
 export type Vec2 = readonly [number, number];
 export type Vec3 = readonly [number, number, number];
@@ -63,8 +64,7 @@ export const m2inv = (A: Mat2): Mat2 | null => {
   return [[d / det, -b / det], [-c / det, a / det]];
 };
 export const m2trace = (A: Mat2): number => {
-  const [[a], [, d]] = A;
-  return a + d;
+  return A[0][0] + A[1][1];
 };
 // Eigen for 2x2 — closed form
 export const m2eigen = (A: Mat2): { values: [number, number]; vectors: [Vec2, Vec2] } | null => {
@@ -231,7 +231,7 @@ export const matEigenSymmetric = (
   const n = matShape(M)[0];
   if (n !== matShape(M)[1]) throw new Error("eigen: square matrix required");
   // Jacobi rotation algorithm
-  let A = M.map((r) => [...r]);
+  const A = M.map((r) => [...r]);
   const V = matIdentity(n);
   for (let iter = 0; iter < iterations; iter++) {
     // find off-diagonal max

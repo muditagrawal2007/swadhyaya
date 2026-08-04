@@ -97,7 +97,7 @@ export function SubspacePlayground() {
         </div>
         <div className="text-[10px] text-dim leading-relaxed">
           The grey dots are the entire span (sampled on a grid). If your test point lands
-          on a dot, it's in the span. If it's off the dots, it can't be reached.
+          on a dot, it&apos;s in the span. If it&apos;s off the dots, it can&apos;t be reached.
         </div>
       </div>
     </div>

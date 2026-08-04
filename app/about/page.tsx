@@ -30,7 +30,7 @@ export default function AboutPage() {
           name="Kalid Azad — BetterExplained"
           role="Plain-English voice"
           url="https://betterexplained.com/articles/linear-algebra-guide/"
-          note="The voice. 'Linear algebra gives you mini-spreadsheets for your math equations.' A spreasheet written as an equation. The 'explain it like a friend at coffee' tone that turns formulas into intuitions."
+          note="The voice. 'Linear algebra gives you mini-spreadsheets for your math equations.' A spreadsheet written as an equation. The 'explain it like a friend at coffee' tone that turns formulas into intuitions."
         />
         <Credit
           name="Gilbert Strang"
@@ -61,7 +61,7 @@ function Credit({ name, role, url, note }: { name: string; role: string; url: st
     <div className="bg-card border border-line rounded-xl p-5">
       <div className="flex items-baseline justify-between gap-4 flex-wrap">
         <h3 className="font-serif text-lg text-ink">{name}</h3>
-        <a href={url} target="_blank" rel="noreferrer" className="text-xs text-accent hover:underline">
+        <a href={url} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline">
           {url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
         </a>
       </div>

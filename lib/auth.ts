@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
 // Auth state is intentionally deferred.
 //
@@ -19,7 +19,7 @@ import { useEffect, useState } from "react";
 // Until then, useAuth() returns { status: "disabled", user: null } and
 // the UI shows an honest "Sign in is paused — your progress saves locally".
 
-export type AuthStatus = "loading" | "disabled";
+export type AuthStatus = "authenticated" | "disabled";
 
 export interface AuthUser {
   id: string;
@@ -28,27 +28,24 @@ export interface AuthUser {
   avatarUrl?: string;
 }
 
-interface AuthState {
+export interface AuthState {
   status: AuthStatus;
   user: AuthUser | null;
 }
 
 const AUTH_ENABLED = false;
 
+const DISABLED_STATE: AuthState = { status: "disabled", user: null };
+
 export function useAuth(): AuthState & {
   login: () => Promise<void>;
   logout: () => void;
 } {
-  const [state, setState] = useState<AuthState>({
-    status: "loading",
-    user: null,
-  });
-
-  useEffect(() => {
-    if (!AUTH_ENABLED) {
-      setState({ status: "disabled", user: null });
-    }
-  }, []);
+  // Static stub. When auth is wired, replace with a Zustand store.
+  const state = useMemo<AuthState>(
+    () => (AUTH_ENABLED ? DISABLED_STATE : DISABLED_STATE),
+    [],
+  );
 
   const login = async () => {
     // Disabled. Wire the real samagama.in OAuth flow when credentials land.

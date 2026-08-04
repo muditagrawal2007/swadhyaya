@@ -1,6 +1,6 @@
 "use client";
 import { useState, useMemo } from "react";
-import { m2, m2det, m2mulVec, fmt } from "@/lib/math";
+import { m2det, fmt } from "@/lib/math";
 import { ArrowRight, RotateCcw, Shuffle, Scaling, Plus } from "lucide-react";
 
 // Concept L5: Row Operations — Multiply, Swap, Add
@@ -13,12 +13,12 @@ export function RowOpsPlayground() {
   const [d, setD] = useState(1);
   const [swap, setSwap] = useState(false);
 
-  const M = useMemo(() => {
-    const base = [[a, b], [c, d]] as const;
-    return swap ? [[c, d], [a, b]] as const : base;
+  const M = useMemo<[[number, number], [number, number]]>(() => {
+    const base: [[number, number], [number, number]] = [[a, b], [c, d]];
+    return swap ? [[c, d], [a, b]] : base;
   }, [a, b, c, d, swap]);
 
-  const det = m2det(M as any);
+  const det = m2det(M);
 
   // Apply a transformation
   const scaleRow = (row: number, k: number) => {
@@ -50,8 +50,12 @@ export function RowOpsPlayground() {
 
   // The "answer" we're solving for
   const b1 = 5, b2 = 3;
-  const x = (M[1][1] * b1 - M[0][1] * b2) / det;
-  const y = (-M[1][0] * b1 + M[0][0] * b2) / det;
+  const m11 = M[0]?.[0] ?? 0;
+  const m12 = M[0]?.[1] ?? 0;
+  const m21 = M[1]?.[0] ?? 0;
+  const m22 = M[1]?.[1] ?? 0;
+  const x = (m22 * b1 - m12 * b2) / det;
+  const y = (-m21 * b1 + m11 * b2) / det;
 
   return (
     <div className="bg-card border border-line rounded-xl p-4">

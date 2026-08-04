@@ -1,8 +1,109 @@
 "use client";
-import { useProgress, levelFromXP, xpForLevel, xpForNextLevel } from "@/lib/progress";
-import { Trophy, Medal, Award, Target, Flame, Zap, Download, Upload, RotateCcw } from "lucide-react";
+import {
+  useProgress,
+  levelFromXP,
+  xpForLevel,
+  xpForNextLevel,
+  MAX_XP,
+} from "@/lib/progress";
+import {
+  Trophy,
+  Medal,
+  Award,
+  Target,
+  Flame,
+  Zap,
+  Download,
+  Upload,
+  RotateCcw,
+} from "lucide-react";
 import { useMemo, useState } from "react";
-import { CONCEPT_BY_ID, PHASES, type ConceptId } from "@/lib/curriculum";
+import {
+  CONCEPT_BY_ID,
+  PHASES,
+  PHASE_PREFIX,
+  isConceptId,
+  type ConceptId,
+  getConceptsByPhase,
+  type Phase,
+} from "@/lib/curriculum";
+
+const MAX_IMPORT_XP = MAX_XP * 1000;
+const MAX_STREAK = 9999;
+
+interface ImportShape {
+  schema?: string;
+  completed?: unknown;
+  xp?: unknown;
+  streak?: unknown;
+  lastVisit?: unknown;
+  lensModes?: unknown;
+}
+
+function isISODate(s: unknown): s is string {
+  return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
+}
+
+function validateImport(raw: unknown): {
+  ok: true;
+  data: {
+    completed: ConceptId[];
+    xp: number;
+    streak: number;
+    lastVisit: string;
+    lensModes: string[];
+  };
+} | { ok: false; reason: string } {
+  if (typeof raw !== "object" || raw === null) {
+    return { ok: false, reason: "File is not a JSON object." };
+  }
+  const r = raw as ImportShape;
+  if (r.schema !== undefined && r.schema !== "swadhyaya.v1") {
+    return { ok: false, reason: `Unknown schema: ${String(r.schema)}` };
+  }
+  if (!Array.isArray(r.completed)) {
+    return { ok: false, reason: "`completed` must be an array." };
+  }
+  const completed: ConceptId[] = [];
+  const seen = new Set<string>();
+  for (const item of r.completed) {
+    if (typeof item !== "string") {
+      return { ok: false, reason: "`completed` must contain only strings." };
+    }
+    if (!isConceptId(item)) {
+      return {
+        ok: false,
+        reason: `Unknown concept id in file: ${item}.`,
+      };
+    }
+    if (seen.has(item)) continue;
+    seen.add(item);
+    completed.push(item);
+  }
+  if (typeof r.xp !== "number" || !Number.isFinite(r.xp)) {
+    return { ok: false, reason: "`xp` must be a finite number." };
+  }
+  if (r.xp < 0 || r.xp > MAX_IMPORT_XP) {
+    return {
+      ok: false,
+      reason: `XP must be between 0 and ${MAX_IMPORT_XP}.`,
+    };
+  }
+  const streak =
+    typeof r.streak === "number" && Number.isFinite(r.streak)
+      ? Math.max(1, Math.min(MAX_STREAK, Math.floor(r.streak)))
+      : 1;
+  const lastVisit = isISODate(r.lastVisit)
+    ? r.lastVisit
+    : new Date().toISOString().slice(0, 10);
+  const lensModes = Array.isArray(r.lensModes)
+    ? r.lensModes.filter((v): v is string => typeof v === "string").slice(0, 20)
+    : [];
+  return {
+    ok: true,
+    data: { completed, xp: r.xp, streak, lastVisit, lensModes },
+  };
+}
 
 export default function LeaderboardPage() {
   const completed = useProgress((s) => s.completed);
@@ -11,6 +112,7 @@ export default function LeaderboardPage() {
   const totalConcepts = Object.keys(CONCEPT_BY_ID).length;
   const [resetConfirm, setResetConfirm] = useState(false);
   const [importMsg, setImportMsg] = useState<string | null>(null);
+  const [importErr, setImportErr] = useState<boolean>(false);
 
   const handleExport = () => {
     const data = {
@@ -39,27 +141,38 @@ export default function LeaderboardPage() {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const parsed = JSON.parse(String(e.target?.result || "{}"));
-        if (
-          typeof parsed !== "object" ||
-          !Array.isArray(parsed.completed) ||
-          typeof parsed.xp !== "number"
-        ) {
-          setImportMsg("Invalid file — missing fields.");
+        const parsed: unknown = JSON.parse(String(e.target?.result || "{}"));
+        const v = validateImport(parsed);
+        if (!v.ok) {
+          setImportErr(true);
+          setImportMsg(v.reason);
           return;
         }
-        const store = useProgress.getState();
-        useProgress.setState({
-          completed: parsed.completed,
-          xp: parsed.xp,
-          streak: parsed.streak ?? 1,
-          lastVisit: parsed.lastVisit ?? new Date().toISOString().slice(0, 10),
-          lensModes: parsed.lensModes ?? [],
-        });
-        setImportMsg(
-          `Imported ${parsed.completed.length} concepts, ${parsed.xp} XP.`,
-        );
+        const current = useProgress.getState();
+        const apply = () => {
+          useProgress.setState({
+            completed: v.data.completed,
+            xp: v.data.xp,
+            streak: v.data.streak,
+            lastVisit: v.data.lastVisit,
+            lensModes: v.data.lensModes,
+          });
+          setImportErr(false);
+          setImportMsg(
+            `Imported ${v.data.completed.length} concepts, ${v.data.xp} XP.`,
+          );
+        };
+        // Confirm overwrite if the user already has progress.
+        if (current.completed.length > 0 && !confirm(
+          `Replace your current progress (${current.completed.length} concepts, ${current.xp} XP) with the file's contents?`,
+        )) {
+          setImportErr(false);
+          setImportMsg("Import cancelled.");
+          return;
+        }
+        apply();
       } catch {
+        setImportErr(true);
         setImportMsg("Could not parse the file as JSON.");
       }
     };
@@ -72,11 +185,17 @@ export default function LeaderboardPage() {
   };
 
   const phaseProgress = useMemo(() => {
-    return PHASES.map((p) => {
-      const phaseIds: ConceptId[] = Object.keys(CONCEPT_BY_ID)
-        .filter((id) => id.startsWith(["L", "V", "T", "F", "E", "S"][p.id - 1])) as ConceptId[];
-      const done = phaseIds.filter((id) => completed.includes(id)).length;
-      return { ...p, total: phaseIds.length, done };
+    return (PHASES.map((p) => p.id) as Phase[]).map((id) => {
+      const phaseConcepts = getConceptsByPhase(id);
+      const prefix = PHASE_PREFIX[id];
+      const done = phaseConcepts.filter((c) => completed.includes(c.id))
+        .length;
+      return {
+        ...PHASES.find((p) => p.id === id)!,
+        total: phaseConcepts.length,
+        done,
+        prefix,
+      };
     });
   }, [completed]);
 
@@ -87,7 +206,10 @@ export default function LeaderboardPage() {
   const level = levelFromXP(xp);
   const lvlStart = xpForLevel(level);
   const lvlEnd = xpForNextLevel(level);
-  const lvlPct = lvlEnd === 99999 ? 100 : ((xp - lvlStart) / (lvlEnd - lvlStart)) * 100;
+  const isMaxLevel = lvlEnd === MAX_XP;
+  const lvlPct = isMaxLevel
+    ? 100
+    : ((xp - lvlStart) / (lvlEnd - lvlStart)) * 100;
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-8">
@@ -109,7 +231,8 @@ export default function LeaderboardPage() {
             <Target size={11} /> Concepts
           </div>
           <div className="mt-1 text-2xl font-mono text-ink">
-            {completed.length}<span className="text-faint text-sm"> / {totalConcepts}</span>
+            {completed.length}
+            <span className="text-faint text-sm"> / {totalConcepts}</span>
           </div>
         </div>
         <div className="bg-card border border-line rounded-xl p-4">
@@ -130,14 +253,25 @@ export default function LeaderboardPage() {
       <div className="bg-card border border-line rounded-xl p-4 mb-6">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <div className="text-[10px] text-faint uppercase tracking-wider">Current Level</div>
+            <div className="text-[10px] text-faint uppercase tracking-wider">
+              Current Level
+            </div>
             <div className="text-2xl font-mono text-ink">Level {level}</div>
           </div>
           <div className="text-right text-xs text-dim">
-            {xp - lvlStart} / {lvlEnd - lvlStart} XP to next
+            {isMaxLevel
+              ? "Max level reached"
+              : `${xp - lvlStart} / ${lvlEnd - lvlStart} XP to next`}
           </div>
         </div>
-        <div className="w-full h-2 bg-elev rounded-full overflow-hidden">
+        <div
+          className="w-full h-2 bg-elev rounded-full overflow-hidden"
+          role="progressbar"
+          aria-label="Level progress"
+          aria-valuenow={Math.round(lvlPct)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
           <div
             className="h-full bg-accent transition-all"
             style={{ width: `${lvlPct}%` }}
@@ -147,7 +281,9 @@ export default function LeaderboardPage() {
 
       {/* Phase progress */}
       <div className="bg-card border border-line rounded-xl p-4 mb-6">
-        <div className="text-[10px] text-faint uppercase tracking-wider mb-3">Phases</div>
+        <div className="text-[10px] text-faint uppercase tracking-wider mb-3">
+          Phases
+        </div>
         <div className="space-y-2.5">
           {phaseProgress.map((p) => {
             const pct = p.total === 0 ? 0 : (p.done / p.total) * 100;
@@ -156,6 +292,7 @@ export default function LeaderboardPage() {
                 <span
                   className="w-1 h-5 rounded-sm shrink-0"
                   style={{ background: p.color }}
+                  aria-hidden="true"
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between text-xs mb-1">
@@ -164,7 +301,14 @@ export default function LeaderboardPage() {
                       {p.done}/{p.total}
                     </span>
                   </div>
-                  <div className="w-full h-1.5 bg-elev rounded-full overflow-hidden">
+                  <div
+                    className="w-full h-1.5 bg-elev rounded-full overflow-hidden"
+                    role="progressbar"
+                    aria-label={`${p.title} progress`}
+                    aria-valuenow={Math.round(pct)}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
                     <div
                       className="h-full transition-all"
                       style={{ width: `${pct}%`, background: p.color }}
@@ -206,9 +350,15 @@ export default function LeaderboardPage() {
                       #{i + 1}
                     </span>
                   )}
-                  <span className="text-[10px] text-faint font-mono w-6">{id}</span>
-                  <span className="text-sm text-ink flex-1 truncate">{c.title}</span>
-                  <span className="text-[10px] text-accent font-mono">+{c.xp} XP</span>
+                  <span className="text-[10px] text-faint font-mono w-6">
+                    {id}
+                  </span>
+                  <span className="text-sm text-ink flex-1 truncate">
+                    {c.title}
+                  </span>
+                  <span className="text-[10px] text-accent font-mono">
+                    +{c.xp} XP
+                  </span>
                 </li>
               );
             })}
@@ -240,6 +390,7 @@ export default function LeaderboardPage() {
               type="file"
               accept="application/json,.json"
               className="hidden"
+              aria-label="Import progress file"
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) handleImport(f);
@@ -273,7 +424,12 @@ export default function LeaderboardPage() {
           )}
         </div>
         {importMsg && (
-          <div className="mt-3 text-xs text-dim">{importMsg}</div>
+          <div
+            role={importErr ? "alert" : "status"}
+            className={`mt-3 text-xs ${importErr ? "text-warn" : "text-dim"}`}
+          >
+            {importMsg}
+          </div>
         )}
       </div>
     </div>

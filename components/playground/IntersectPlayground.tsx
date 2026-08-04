@@ -2,6 +2,7 @@
 import { useState, useMemo } from "react";
 import { VectorCanvas } from "@/components/viz/VectorCanvas";
 import { Slider } from "./Slider";
+import { matDet } from "@/lib/math";
 
 // Concept: L1 → L2 → L3 (intersection of 2 lines, 3 lines, 2 lines + 1 different)
 // "An equation is a question. A system is a conversation between equations."
@@ -28,12 +29,12 @@ export function IntersectPlayground() {
   ];
   if (show3) lines.push({ m: m3, c: c3, label: "L3", color: "var(--transform)" });
 
-  // pairwise intersections
   const intersects = useMemo(() => {
     const out: Array<{ x: number; y: number; labels: string; color: string } | null> = [];
     for (let i = 0; i < lines.length; i++) {
       for (let j = i + 1; j < lines.length; j++) {
-        const a = lines[i], b = lines[j];
+        const a = lines[i]!;
+        const b = lines[j]!;
         const det = a.m - b.m;
         if (Math.abs(det) < 1e-6) {
           out.push(null);
@@ -47,38 +48,40 @@ export function IntersectPlayground() {
     return out;
   }, [m1, c1, m2, c2, m3, c3, show3]);
 
-  // For L3 only: 3 lines meeting
+  // Triple intersection via Cramer's rule using matDet.
+  // Each line y = m*x + c becomes -m*x + y = c, i.e. row [-m, 1, c] in the
+  // 2x2 system [A] [x;y] = [c1; c2; c3]. We solve with 3×3 determinant
+  // trick (homogeneous-style) by padding with [x, y, -c] unknowns.
   const triple = useMemo(() => {
     if (!show3) return null;
     const det = (m1 - m2) * (m2 - m3) * (m1 - m3);
     if (Math.abs(det) < 1e-6) return null;
-    // Solve via Cramer's rule
-    const a = [
-      [m1, -1, c1],
-      [m2, -1, c2],
-      [m3, -1, c3],
-    ];
-    // y - m*x = c → m*x - y = -c
-    // Hmm, the form is y = mx + c so  -m*x + y = c
-    const A = [
+
+    // System: -m*x + y = c. Build 3×3 augmented matrix and solve via Cramer.
+    const A: number[][] = [
       [-m1, 1, c1],
       [-m2, 1, c2],
       [-m3, 1, c3],
     ];
-    const detA = A[0][0]*(A[1][1]*A[2][2]-A[1][2]*A[2][1]) - A[0][1]*(A[1][0]*A[2][2]-A[1][2]*A[2][0]) + A[0][2]*(A[1][0]*A[2][1]-A[1][1]*A[2][0]);
+    const detA = matDet(A);
     if (Math.abs(detA) < 1e-6) return null;
-    const Ax = [
+
+    // Replace column 0 with RHS to solve for x.
+    const Ax: number[][] = [
       [c1, 1, c1],
       [c2, 1, c2],
       [c3, 1, c3],
     ];
-    const detAx = Ax[0][0]*(Ax[1][1]*Ax[2][2]-Ax[1][2]*Ax[2][1]) - Ax[0][1]*(Ax[1][0]*Ax[2][2]-Ax[1][2]*Ax[2][0]) + Ax[0][2]*(Ax[1][0]*Ax[2][1]-Ax[1][1]*Ax[2][0]);
-    const Ay = [
+    const detAx = matDet(Ax);
+
+    // Replace column 1 with RHS to solve for y.
+    const Ay: number[][] = [
       [-m1, c1, c1],
       [-m2, c2, c2],
       [-m3, c3, c3],
     ];
-    const detAy = Ay[0][0]*(Ay[1][1]*Ay[2][2]-Ay[1][2]*Ay[2][1]) - Ay[0][1]*(Ay[1][0]*Ay[2][2]-Ay[1][2]*Ay[2][0]) + Ay[0][2]*(Ay[1][0]*Ay[2][1]-Ay[1][1]*Ay[2][0]);
+    const detAy = matDet(Ay);
+
     return { x: detAx / detA, y: detAy / detA };
   }, [show3, m1, c1, m2, c2, m3, c3]);
 
@@ -98,32 +101,64 @@ export function IntersectPlayground() {
             color: l.color,
             width: 2.5,
           }))}
-          arrows={[
-            ...(triple
-              ? [{ from: { x: 0, y: 0 }, to: triple, color: "var(--accent)", label: `(${triple.x.toFixed(2)}, ${triple.y.toFixed(2)})`, width: 3, labelOffset: { x: 0, y: -0.4 } }]
-              : intersects.filter(Boolean).map((p, i) => ({
-                  from: { x: 0, y: 0 },
-                  to: p!,
-                  color: p!.color,
-                  label: p!.labels,
-                  width: 2.5,
-                  labelOffset: { x: 0, y: -0.3 - i * 0.3 },
-                }))),
-          ]}
+          arrows={
+            triple
+              ? [
+                  {
+                    from: { x: 0, y: 0 },
+                    to: triple,
+                    color: "var(--accent)",
+                    label: `(${triple.x.toFixed(2)}, ${triple.y.toFixed(2)})`,
+                    width: 3,
+                    labelOffset: { x: 0, y: -0.4 },
+                  },
+                ]
+              : intersects
+                  .filter((p): p is NonNullable<typeof p> => Boolean(p))
+                  .map((p, i) => ({
+                    from: { x: 0, y: 0 },
+                    to: p,
+                    color: p.color,
+                    label: p.labels,
+                    width: 2.5,
+                    labelOffset: { x: 0, y: -0.3 - i * 0.3 },
+                  }))
+          }
         />
       </div>
       <div className="space-y-3">
         {lines.map((l, i) => (
           <div key={i} className="bg-card border border-line rounded-xl p-4">
-            <div className="text-[10px] uppercase tracking-wider mb-2" style={{ color: l.color }}>
+            <div
+              className="text-[10px] uppercase tracking-wider mb-2"
+              style={{ color: l.color }}
+            >
               {l.label}: y = {l.m.toFixed(2)}x + {l.c.toFixed(2)}
             </div>
-            <Slider label="m" value={l.m} min={-3} max={3} step={0.05} onChange={(v) => {
-              if (i === 0) setM1(v); else if (i === 1) setM2(v); else setM3(v);
-            }} />
-            <Slider label="c" value={l.c} min={-4} max={4} step={0.1} onChange={(v) => {
-              if (i === 0) setC1(v); else if (i === 1) setC2(v); else setC3(v);
-            }} />
+            <Slider
+              label="m"
+              value={l.m}
+              min={-3}
+              max={3}
+              step={0.05}
+              onChange={(v) => {
+                if (i === 0) setM1(v);
+                else if (i === 1) setM2(v);
+                else setM3(v);
+              }}
+            />
+            <Slider
+              label="c"
+              value={l.c}
+              min={-4}
+              max={4}
+              step={0.1}
+              onChange={(v) => {
+                if (i === 0) setC1(v);
+                else if (i === 1) setC2(v);
+                else setC3(v);
+              }}
+            />
           </div>
         ))}
         {lines.length < 3 && (
@@ -142,7 +177,8 @@ export function IntersectPlayground() {
         )}
         {show3 && !triple && !intersects.includes(null) && (
           <div className="bg-warn/10 border border-warn/30 rounded-xl p-3 text-xs text-warn">
-            The three lines don't all meet at one point — no triple intersection.
+            The three lines don&apos;t all meet at one point — no triple
+            intersection.
           </div>
         )}
       </div>

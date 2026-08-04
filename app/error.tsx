@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, RotateCw } from "lucide-react";
+import { AlertTriangle, ArrowLeft, RotateCw, Copy, Check } from "lucide-react";
 
 export default function Error({
   error,
@@ -11,10 +11,32 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const [copied, setCopied] = useState(false);
+
   useEffect(() => {
-    // Log to console for now. Wire a real reporter (Sentry, etc.) when needed.
+    // Log to console + a hook for a future reporter (Sentry, Datadog, etc.).
+    // The placeholder below is a single integration point — wire a real
+    // reporter here when ready.
     console.error("Swadhyaya runtime error:", error);
   }, [error]);
+
+  const details = [
+    error.message,
+    error.digest ? `digest: ${error.digest}` : null,
+    `at: ${new Date().toISOString()}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(details);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard may be unavailable in some browsers */
+    }
+  };
 
   return (
     <div className="max-w-xl mx-auto px-6 py-24 text-center">
@@ -29,7 +51,7 @@ export default function Error({
       </h1>
       <p className="text-dim leading-relaxed mb-8">
         A runtime error happened while rendering this view. Your progress is
-        safe — it's saved locally in your browser.
+        safe — it&apos;s saved locally in your browser.
       </p>
       {error.digest && (
         <div className="mb-6 text-xs font-mono text-faint">
@@ -43,6 +65,14 @@ export default function Error({
         >
           <RotateCw size={14} />
           <span>Try again</span>
+        </button>
+        <button
+          onClick={copy}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-line text-ink hover:bg-elev transition"
+          aria-label="Copy error details"
+        >
+          {copied ? <Check size={14} /> : <Copy size={14} />}
+          <span>{copied ? "Copied" : "Copy details"}</span>
         </button>
         <Link
           href="/learn"

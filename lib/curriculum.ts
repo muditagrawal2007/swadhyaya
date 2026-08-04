@@ -47,7 +47,35 @@ export type PlaygroundId =
   // the concept-level widget; the Test tab question embeds the q-level one
   // above the options so the student can manipulate the math and observe
   // the answer directly.
-  | "q-L1-q1" | "q-L2-q1" | "q-L4-q1" | "q-S1-q1" | "q-E5-q1";
+  | "q-L1-q1"
+  | "q-L2-q1"
+  | "q-L2-q2"
+  | "q-L3-q1"
+  | "q-L4-q1"
+  | "q-L5-q1"
+  | "q-L6-q1"
+  | "q-L7-q1"
+  | "q-L8-q1"
+  | "q-V1-q1"
+  | "q-V2-q1"
+  | "q-V2-q2"
+  | "q-V4-q1"
+  | "q-V5-q1"
+  | "q-V6-q1"
+  | "q-V8-q1"
+  | "q-T2-q1"
+  | "q-T3-q1"
+  | "q-T4-q1"
+  | "q-T5-q1"
+  | "q-T7-q1"
+  | "q-T8-q1"
+  | "q-E1-q1"
+  | "q-E2-q1"
+  | "q-E3-q1"
+  | "q-S1-q1"
+  | "q-S2-q1"
+  | "q-S3-q1"
+  | "q-E5-q1";
 
 export type QuestionId = string;
 
@@ -561,7 +589,36 @@ export const CONCEPTS: ConceptNode[] = [
 
 // Build quick lookup
 export const CONCEPT_BY_ID: Record<ConceptId, ConceptNode> =
-  Object.fromEntries(CONCEPTS.map((c) => [c.id, c])) as any;
+  Object.fromEntries(CONCEPTS.map((c) => [c.id, c])) as Record<
+    ConceptId,
+    ConceptNode
+  >;
+
+// Single source of truth for the phase letter prefix (L, V, T, F, E, S).
+// Used to group concepts by phase across the UI without duplicating the lookup.
+export const PHASE_PREFIX: Record<Phase, string> = {
+  1: "L",
+  2: "V",
+  3: "T",
+  4: "F",
+  5: "E",
+  6: "S",
+};
+
+// Concepts belonging to a phase, precomputed once.
+const CONCEPTS_BY_PHASE: Record<Phase, ConceptNode[]> = (() => {
+  const map = {} as Record<Phase, ConceptNode[]>;
+  for (const phase of [1, 2, 3, 4, 5, 6] as Phase[]) {
+    map[phase] = CONCEPTS.filter((c) => c.phase === phase);
+  }
+  return map;
+})();
+
+export const getConceptsByPhase = (phase: Phase): ConceptNode[] =>
+  CONCEPTS_BY_PHASE[phase];
+
+export const isConceptId = (id: string): id is ConceptId =>
+  Object.prototype.hasOwnProperty.call(CONCEPT_BY_ID, id);
 
 // What's unlocked given current completion
 export const getUnlocked = (completed: Set<ConceptId>): Set<ConceptId> => {

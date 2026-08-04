@@ -21,7 +21,9 @@ export function QuestionNav({
   const correctCount = Object.values(correctMap).filter(Boolean).length;
   return (
     <div className="space-y-2">
-      <div className="text-[10px] text-faint uppercase tracking-wider">Progress</div>
+      <div className="text-[10px] text-faint uppercase tracking-wider">
+        Progress
+      </div>
       <div className="bg-card border border-line rounded-xl p-3">
         <div className="text-2xl font-mono text-ink">
           {correctCount}
@@ -37,18 +39,22 @@ export function QuestionNav({
             <button
               key={qq.id}
               onClick={() => onJump(i)}
+              aria-pressed={i === activeIndex}
+              aria-label={`Question ${i + 1}${
+                isCorrect ? ", correct" : isWrong ? ", try again" : ""
+              }`}
               className={cn(
                 "flex items-center justify-between p-2 rounded text-xs border transition",
                 i === activeIndex
                   ? "border-accent bg-accent/10"
                   : "border-line bg-elev/30 hover:bg-elev/60",
-                isCorrect && "text-accent",
+                isCorrect && "text-correct border-correct/40",
                 isWrong && "text-warn",
               )}
             >
               <span>Q{i + 1}</span>
-              {isCorrect && <Check size={11} />}
-              {isWrong && <span>×</span>}
+              {isCorrect && <Check size={11} aria-hidden="true" />}
+              {isWrong && <span aria-hidden="true">×</span>}
             </button>
           );
         })}

@@ -115,19 +115,19 @@ export default function HomePage() {
         <h2 className="font-serif text-2xl text-ink">Built on the shoulders of</h2>
         <div className="mt-4 flex flex-wrap gap-4 text-sm text-dim">
           <span>
-            <a className="text-ink hover:text-accent" href="https://nptel.ac.in/courses/111106051" target="_blank" rel="noreferrer">Prof. Sudarshan Iyengar</a> (IIT Madras NPTEL)
+            <a className="text-ink hover:text-accent" href="https://nptel.ac.in/courses/111106051" target="_blank" rel="noopener noreferrer">Prof. Sudarshan Iyengar</a> (IIT Madras NPTEL)
           </span>
           <span className="text-faint">·</span>
           <span>
-            <a className="text-ink hover:text-accent" href="https://sudarshansudarshan.github.io/codershigh/matrixmystics/" target="_blank" rel="noreferrer">Codershigh Matrix Mystics</a> workshop
+            <a className="text-ink hover:text-accent" href="https://sudarshansudarshan.github.io/codershigh/matrixmystics/" target="_blank" rel="noopener noreferrer">Codershigh Matrix Mystics</a> workshop
           </span>
           <span className="text-faint">·</span>
           <span>
-            <a className="text-ink hover:text-accent" href="https://www.3blue1brown.com/topics/linear-algebra" target="_blank" rel="noreferrer">3Blue1Brown</a> visual sequencing
+            <a className="text-ink hover:text-accent" href="https://www.3blue1brown.com/topics/linear-algebra" target="_blank" rel="noopener noreferrer">3Blue1Brown</a> visual sequencing
           </span>
           <span className="text-faint">·</span>
           <span>
-            <a className="text-ink hover:text-accent" href="https://betterexplained.com/articles/linear-algebra-guide/" target="_blank" rel="noreferrer">BetterExplained</a> voice
+            <a className="text-ink hover:text-accent" href="https://betterexplained.com/articles/linear-algebra-guide/" target="_blank" rel="noopener noreferrer">BetterExplained</a> voice
           </span>
         </div>
       </section>
