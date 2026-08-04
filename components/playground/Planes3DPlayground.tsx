@@ -86,21 +86,32 @@ const PRESETS: Preset[] = [
 // that when only ONE plane's sliders change, the other two skip their
 // geometry recomputation (each PlaneMesh builds a Float32Array on every
 // render). Combined with useDeferredValue above, slider drags stay smooth.
+//
+// IMPORTANT: props are taken as PRIMITIVE scalars (nx, ny, nz, d), not
+// arrays. Passing `normal={[1, 0, 0]}` would create a new array on
+// every render and React.memo's shallow equality would always treat the
+// prop as different — defeating the optimization. Primitives compare
+// by value, so the memo actually skips when nothing relevant changed.
 const PlaneMesh = memo(function PlaneMesh({
-  normal,
+  nx,
+  ny,
+  nz,
   d,
   color,
   opacity = 0.3,
   label,
   visible = true,
 }: {
-  normal: [number, number, number];
+  nx: number;
+  ny: number;
+  nz: number;
   d: number;
   color: string;
   opacity?: number;
   label?: string;
   visible?: boolean;
 }) {
+  const normal: [number, number, number] = [nx, ny, nz];
   const nLen = Math.hypot(normal[0], normal[1], normal[2]);
   if (nLen < 0.01 || !visible) return null;
   const n: [number, number, number] = [
@@ -232,6 +243,16 @@ function EquationDisplay({
   );
 }
 
+// Structural type for the OrbitControls imperative handle. drei exports
+// the controls as the three-stdlib OrbitControls class, but we don't
+// need to depend on three-stdlib directly — a minimal structural type
+// works for what we need (programmatic zoom + reset).
+type OrbitHandle = {
+  object: THREE.PerspectiveCamera;
+  target: THREE.Vector3;
+  update(): void;
+};
+
 export function Planes3DPlayground() {
   const [presetId, setPresetId] = useState<PresetId>("single-point");
   const initial = PRESETS[0].coeffs;
@@ -267,19 +288,24 @@ export function Planes3DPlayground() {
     setD3(c[2][3]);
   };
 
-  const onSliderChange = () => setPresetId("custom");
+const onSliderChange = () => setPresetId("custom");
 
-  // Ref handle for the OrbitControls instance. drei's typed ref is too
-// strict for our needs — we only need to read .object, .target, and
-// call .update() to do programmatic zoom / reset.
-type OrbitHandle = {
-  object: THREE.PerspectiveCamera;
-  target: THREE.Vector3;
-  update(): void;
-};
-
+  // Ref handle for the OrbitControls instance.
   const controlsRef = useRef<OrbitHandle | null>(null);
   const DEFAULT_CAMERA_POS: [number, number, number] = [6, 5, 7];
+
+  // Stable camera config for <Canvas>. Without this, every slider
+  // drag creates a new object literal for `camera`, which makes r3f
+  // reset the camera to its initial position — making the orbit feel
+  // broken. Memoising it keeps the camera mounted across renders.
+  const cameraConfig = useMemo(
+    () =>
+      ({
+        position: [...DEFAULT_CAMERA_POS] as [number, number, number],
+        fov: 50,
+      }),
+    [DEFAULT_CAMERA_POS],
+  );
 
   const zoom = (factor: number) => {
     const c = controlsRef.current;
@@ -302,12 +328,35 @@ type OrbitHandle = {
     c.update();
   };
 
-  // Defer the heavy computation so slider drags stay snappy — the
-// recomputation of the RREF, solution, and 3D scene runs at a lower
-// priority than the immediate slider display updates.
-  const deferred = useDeferredValue({
-    a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3,
-  });
+// Defer the heavy computation so slider drags stay snappy. Each
+  // slider value gets its own deferred copy so React can compare them
+  // individually with Object.is and skip the deferral when the value
+  // didn't actually change. (Wrapping them all in one object would
+  // defeat the purpose — Object.is on a fresh object literal is
+  // always false, so useDeferredValue would never actually defer.)
+  const da1 = useDeferredValue(a1);
+  const db1 = useDeferredValue(b1);
+  const dc1 = useDeferredValue(c1);
+  const dd1 = useDeferredValue(d1);
+  const da2 = useDeferredValue(a2);
+  const db2 = useDeferredValue(b2);
+  const dc2 = useDeferredValue(c2);
+  const dd2 = useDeferredValue(d2);
+  const da3 = useDeferredValue(a3);
+  const db3 = useDeferredValue(b3);
+  const dc3 = useDeferredValue(c3);
+  const dd3 = useDeferredValue(d3);
+
+  // Aggregated view used by the heavy deps. Built with useMemo so the
+  // array reference is stable when nothing has changed.
+  const deferred = useMemo(
+    () => ({
+      a1: da1, b1: db1, c1: dc1, d1: dd1,
+      a2: da2, b2: db2, c2: dc2, d2: dd2,
+      a3: da3, b3: db3, c3: dc3, d3: dd3,
+    }),
+    [da1, db1, dc1, dd1, da2, db2, dc2, dd2, da3, db3, dc3, dd3],
+  );
 
   const rows: [number, number, number, number][] = [
     [deferred.a1, deferred.b1, deferred.c1, deferred.d1],
@@ -462,7 +511,7 @@ type OrbitHandle = {
           </div>
           <div className="bg-canvas border border-line rounded-lg h-[460px] overflow-hidden relative">
             <Canvas
-              camera={{ position: [...DEFAULT_CAMERA_POS], fov: 50 }}
+              camera={cameraConfig}
               dpr={[1, 1.5]}
               gl={{
                 antialias: true,
@@ -496,19 +545,25 @@ type OrbitHandle = {
               </Html>
 
               <PlaneMesh
-                normal={[deferred.a1, deferred.b1, deferred.c1]}
+                nx={deferred.a1}
+                ny={deferred.b1}
+                nz={deferred.c1}
                 d={deferred.d1}
                 color="#e8864a"
                 label="P1"
               />
               <PlaneMesh
-                normal={[deferred.a2, deferred.b2, deferred.c2]}
+                nx={deferred.a2}
+                ny={deferred.b2}
+                nz={deferred.c2}
                 d={deferred.d2}
                 color="#6db3ff"
                 label="P2"
               />
               <PlaneMesh
-                normal={[deferred.a3, deferred.b3, deferred.c3]}
+                nx={deferred.a3}
+                ny={deferred.b3}
+                nz={deferred.c3}
                 d={deferred.d3}
                 color="#4dd9a8"
                 label="P3"
