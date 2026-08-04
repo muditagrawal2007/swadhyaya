@@ -639,3 +639,25 @@ export const isUnlocked = (
   id: ConceptId,
   completed: Set<ConceptId>,
 ): boolean => getUnlocked(completed).has(id);
+
+// Linear walk through the curriculum. Returns the concept that
+// naturally follows `id` in the reading order — same phase + next
+// order, otherwise the first concept of the next phase. Returns null
+// at the end of the journey (S5).
+export function getNextConceptId(id: ConceptId): ConceptId | null {
+  const cur = CONCEPT_BY_ID[id];
+  if (!cur) return null;
+  const samePhase = CONCEPTS_BY_PHASE[cur.phase];
+  // Skip T2b in the linear flow — it's an aside inserted at order 7
+  // that doesn't break the main chain (T6 → T7).
+  const linearOrder = samePhase
+    .filter((c) => c.id !== "T2b")
+    .sort((a, b) => a.order - b.order);
+  const idx = linearOrder.findIndex((c) => c.id === id);
+  if (idx >= 0 && idx < linearOrder.length - 1) return linearOrder[idx + 1].id;
+  const nextPhase = (cur.phase + 1) as Phase;
+  if (nextPhase > 6) return null;
+  const next = CONCEPTS_BY_PHASE[nextPhase];
+  if (!next || next.length === 0) return null;
+  return [...next].sort((a, b) => a.order - b.order)[0].id;
+}

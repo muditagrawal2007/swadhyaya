@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   CONCEPT_BY_ID,
   PHASES,
+  getNextConceptId,
+  getUnlocked,
   type ConceptId,
 } from "@/lib/curriculum";
 import { useProgress, useIsUnlocked } from "@/lib/progress";
@@ -12,7 +14,7 @@ import { QUESTIONS_BY_CONCEPT, type Question } from "@/lib/questions";
 import { Playground } from "@/components/playground/Playground";
 import { QuestionCard } from "@/components/question/QuestionCard";
 import { QuestionNav } from "@/components/question/QuestionNav";
-import { Lock, Check, Sparkles, ArrowLeft } from "lucide-react";
+import { Lock, Check, Sparkles, ArrowLeft, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const fireConfetti = async () => {
@@ -83,6 +85,12 @@ export function ConceptPage({ id }: { id: ConceptId }) {
     () => PHASES.find((p) => p.id === concept.phase)!,
     [concept.phase],
   );
+
+  const nextId = useMemo(() => getNextConceptId(concept.id), [concept.id]);
+  const nextConcept = nextId ? CONCEPT_BY_ID[nextId] : null;
+  const nextUnlocked = nextId
+    ? getUnlocked(new Set(completed)).has(nextId)
+    : false;
 
   if (!isUnlocked) {
     return (
@@ -254,6 +262,9 @@ export function ConceptPage({ id }: { id: ConceptId }) {
             fireConfetti();
           }}
           alreadyDone={isDone}
+          nextConcept={nextConcept ? { id: nextConcept.id, title: nextConcept.title } : null}
+          nextUnlocked={nextUnlocked}
+          onGoToNext={() => router.push(`/learn/${nextConcept?.id}`)}
         />
       )}
     </div>
@@ -424,10 +435,16 @@ function TestTab({
   questions,
   onPass,
   alreadyDone,
+  nextConcept,
+  nextUnlocked,
+  onGoToNext,
 }: {
   questions: Question[];
   onPass: () => void;
   alreadyDone: boolean;
+  nextConcept: { id: string; title: string } | null;
+  nextUnlocked: boolean;
+  onGoToNext: () => void;
 }) {
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -511,13 +528,48 @@ function TestTab({
             <p className="text-sm text-dim mt-1">
               +{questions.reduce((s, qq) => s + qq.xp, 0)} XP earned
             </p>
-            <button
-              onClick={onPass}
-              disabled={alreadyDone}
-              className="mt-4 px-5 py-2.5 rounded bg-accent text-canvas font-medium disabled:opacity-50"
-            >
-              {alreadyDone ? "Already locked in" : "Mark complete & continue"}
-            </button>
+            <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2">
+              <button
+                onClick={onPass}
+                disabled={alreadyDone}
+                className="px-5 py-2.5 rounded bg-accent text-canvas font-medium disabled:opacity-50"
+              >
+                {alreadyDone ? "Already locked in" : "Mark complete"}
+              </button>
+              {nextConcept &&
+                (alreadyDone ? (
+                  <Link
+                    href={`/learn/${nextConcept.id}`}
+                    className={cn(
+                      "px-5 py-2.5 rounded font-medium inline-flex items-center gap-2 transition",
+                      nextUnlocked
+                        ? "bg-ink text-canvas hover:opacity-90"
+                        : "border border-line bg-elev/40 text-dim hover:bg-elev",
+                    )}
+                  >
+                    {nextUnlocked
+                      ? "Continue to next story"
+                      : "Preview next story"}
+                    <ArrowRight size={14} aria-hidden="true" />
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => {
+                      onPass();
+                      onGoToNext();
+                    }}
+                    className="px-5 py-2.5 rounded bg-ink text-canvas font-medium inline-flex items-center gap-2 hover:opacity-90 transition"
+                  >
+                    Continue to next story
+                    <ArrowRight size={14} aria-hidden="true" />
+                  </button>
+                ))}
+            </div>
+            {nextConcept && (
+              <p className="mt-3 text-[10px] text-faint uppercase tracking-wider">
+                Next · {nextConcept.id} — {nextConcept.title}
+              </p>
+            )}
           </div>
         )}
       </div>
