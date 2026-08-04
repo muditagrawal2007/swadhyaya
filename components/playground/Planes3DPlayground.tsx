@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useDeferredValue, memo } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Html, Line, Text } from "@react-three/drei";
@@ -82,7 +82,11 @@ const PRESETS: Preset[] = [
   },
 ];
 
-function PlaneMesh({
+// PlaneMesh re-renders on every slider tick. Wrapped in React.memo so
+// that when only ONE plane's sliders change, the other two skip their
+// geometry recomputation (each PlaneMesh builds a Float32Array on every
+// render). Combined with useDeferredValue above, slider drags stay smooth.
+const PlaneMesh = memo(function PlaneMesh({
   normal,
   d,
   color,
@@ -184,7 +188,7 @@ function PlaneMesh({
       )}
     </group>
   );
-}
+});
 
 function EquationDisplay({
   rows,
@@ -298,22 +302,33 @@ type OrbitHandle = {
     c.update();
   };
 
+  // Defer the heavy computation so slider drags stay snappy — the
+// recomputation of the RREF, solution, and 3D scene runs at a lower
+// priority than the immediate slider display updates.
+  const deferred = useDeferredValue({
+    a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3,
+  });
+
   const rows: [number, number, number, number][] = [
-    [a1, b1, c1, d1],
-    [a2, b2, c2, d2],
-    [a3, b3, c3, d3],
+    [deferred.a1, deferred.b1, deferred.c1, deferred.d1],
+    [deferred.a2, deferred.b2, deferred.c2, deferred.d2],
+    [deferred.a3, deferred.b3, deferred.c3, deferred.d3],
   ];
 
   const rrefResult = useMemo(() => {
     const A = [
-      [a1, b1, c1],
-      [a2, b2, c2],
-      [a3, b3, c3],
+      [deferred.a1, deferred.b1, deferred.c1],
+      [deferred.a2, deferred.b2, deferred.c2],
+      [deferred.a3, deferred.b3, deferred.c3],
     ];
-    const b = [d1, d2, d3];
+    const b = [deferred.d1, deferred.d2, deferred.d3];
     const aug = A.map((row, i) => [...row, b[i]]);
     return matRref(aug);
-  }, [a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]);
+  }, [
+    deferred.a1, deferred.b1, deferred.c1, deferred.d1,
+    deferred.a2, deferred.b2, deferred.c2, deferred.d2,
+    deferred.a3, deferred.b3, deferred.c3, deferred.d3,
+  ]);
 
   const solution = useMemo(() => {
     const { rref, pivots } = rrefResult;
@@ -368,7 +383,9 @@ type OrbitHandle = {
 
   const activePreset = PRESETS.find((p) => p.id === presetId);
 
-  const [showDetails, setShowDetails] = useState(true);
+  // Collapsed by default — the tables are dense and slow the first
+// paint. The student can click the header to expand them when curious.
+  const [showDetails, setShowDetails] = useState(false);
 
   return (
     <div className="space-y-5">
@@ -444,7 +461,15 @@ type OrbitHandle = {
             </span>
           </div>
           <div className="bg-canvas border border-line rounded-lg h-[460px] overflow-hidden relative">
-            <Canvas camera={{ position: [...DEFAULT_CAMERA_POS], fov: 50 }}>
+            <Canvas
+              camera={{ position: [...DEFAULT_CAMERA_POS], fov: 50 }}
+              dpr={[1, 1.5]}
+              gl={{
+                antialias: true,
+                powerPreference: "high-performance",
+                alpha: true,
+              }}
+            >
               <ambientLight intensity={0.6} />
               <directionalLight position={[5, 5, 5]} intensity={0.7} />
               <directionalLight position={[-3, 2, -2]} intensity={0.3} />
@@ -471,20 +496,20 @@ type OrbitHandle = {
               </Html>
 
               <PlaneMesh
-                normal={[a1, b1, c1]}
-                d={d1}
+                normal={[deferred.a1, deferred.b1, deferred.c1]}
+                d={deferred.d1}
                 color="#e8864a"
                 label="P1"
               />
               <PlaneMesh
-                normal={[a2, b2, c2]}
-                d={d2}
+                normal={[deferred.a2, deferred.b2, deferred.c2]}
+                d={deferred.d2}
                 color="#6db3ff"
                 label="P2"
               />
               <PlaneMesh
-                normal={[a3, b3, c3]}
-                d={d3}
+                normal={[deferred.a3, deferred.b3, deferred.c3]}
+                d={deferred.d3}
                 color="#4dd9a8"
                 label="P3"
               />
