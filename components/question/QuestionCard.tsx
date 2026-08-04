@@ -1,4 +1,5 @@
 "use client";
+import { useMemo } from "react";
 import {
   Check,
   X,
@@ -71,6 +72,31 @@ export function QuestionCard({
   const meta = TYPE_META[q.type];
   const TypeIcon = meta?.Icon ?? Calculator;
 
+  // Shuffle option order so no one can guess by position.
+  // The shuffle is deterministic per question id — stable while the
+  // student interacts with one question, but reshuffled each time a
+  // new question is shown or the test is restarted.
+  const shuffledOptions = useMemo(() => {
+    const seed = q.id
+      .split("")
+      .reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) >>> 0, 0);
+    const opts = [...q.options];
+    // Mulberry32 — small, fast, good-enough PRNG seeded per-question.
+    let s = seed >>> 0;
+    const rand = () => {
+      s = (s + 0x6d2b79f5) >>> 0;
+      let t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    for (let i = opts.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [opts[i], opts[j]] = [opts[j], opts[i]];
+    }
+    return opts;
+  }, [q.id, q.options]);
+
   return (
     <div className="bg-card border border-line rounded-xl p-6">
       <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
@@ -114,7 +140,7 @@ export function QuestionCard({
         aria-required="true"
         className="space-y-2"
       >
-        {q.options.map((o) => {
+        {shuffledOptions.map((o) => {
           const isAnswered = submitted;
           const isSelected = selected === o.id;
           const isCorrectOpt = o.correct;
@@ -151,7 +177,7 @@ export function QuestionCard({
             <label
               key={o.id}
               className={cn(
-                "w-full text-left p-3 rounded-lg border transition flex items-center cursor-pointer",
+                "w-full min-h-[3.25rem] text-left px-3 py-2.5 rounded-lg border transition flex items-center cursor-pointer",
                 cls,
               )}
             >
@@ -164,10 +190,12 @@ export function QuestionCard({
                 onChange={() => onSelect(o.id)}
                 className="sr-only"
               />
-              <span className="font-mono text-xs text-faint mr-2">
+              <span className="font-mono text-xs text-faint mr-2 shrink-0">
                 {o.id.toUpperCase()}
               </span>
-              <span className="flex-1">{o.label}</span>
+              <span className="flex-1 leading-snug break-words line-clamp-3">
+                {o.label}
+              </span>
               {icon}
             </label>
           );
