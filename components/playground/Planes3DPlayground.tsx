@@ -1,12 +1,19 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Html, Line, Text } from "@react-three/drei";
 import { matRref } from "@/lib/math";
 import { Slider } from "./Slider";
 import { cn } from "@/lib/cn";
-import { Sparkles, AlertTriangle, Infinity as InfIcon } from "lucide-react";
+import {
+  Sparkles,
+  AlertTriangle,
+  Infinity as InfIcon,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+} from "lucide-react";
 
 // Concept L3: Three equations in three unknowns.
 // "Three planes meeting at a point — or not. The 3D upgrade of L2."
@@ -255,6 +262,39 @@ export function Planes3DPlayground() {
 
   const onSliderChange = () => setPresetId("custom");
 
+  // Ref handle for the OrbitControls instance. drei's typed ref is too
+// strict for our needs — we only need to read .object, .target, and
+// call .update() to do programmatic zoom / reset.
+type OrbitHandle = {
+  object: THREE.PerspectiveCamera;
+  target: THREE.Vector3;
+  update(): void;
+};
+
+  const controlsRef = useRef<OrbitHandle | null>(null);
+  const DEFAULT_CAMERA_POS: [number, number, number] = [6, 5, 7];
+
+  const zoom = (factor: number) => {
+    const c = controlsRef.current;
+    if (!c) return;
+    const cam = c.object;
+    const dir = new THREE.Vector3()
+      .subVectors(cam.position, c.target)
+      .normalize();
+    const dist = cam.position.distanceTo(c.target) * factor;
+    cam.position.copy(c.target).add(dir.multiplyScalar(dist));
+    c.update();
+  };
+
+  const resetView = () => {
+    const c = controlsRef.current;
+    if (!c) return;
+    const cam = c.object;
+    cam.position.set(...DEFAULT_CAMERA_POS);
+    c.target.set(0, 0, 0);
+    c.update();
+  };
+
   const rows: [number, number, number, number][] = [
     [a1, b1, c1, d1],
     [a2, b2, c2, d2],
@@ -322,15 +362,15 @@ export function Planes3DPlayground() {
   const activePreset = PRESETS.find((p) => p.id === presetId);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Preset buttons */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2.5">
         {PRESETS.map((p) => (
           <button
             key={p.id}
             onClick={() => applyPreset(p.id)}
             className={cn(
-              "px-3 py-1.5 rounded-lg text-xs border transition",
+              "px-4 py-2 rounded-lg text-xs border transition font-medium",
               presetId === p.id
                 ? "bg-accent/15 border-accent/40 text-accent"
                 : "border-line bg-elev/40 text-dim hover:text-ink hover:bg-elev",
@@ -340,7 +380,7 @@ export function Planes3DPlayground() {
           </button>
         ))}
         {presetId === "custom" && (
-          <span className="px-3 py-1.5 rounded-lg text-xs border border-warn/40 bg-warn/10 text-warn">
+          <span className="px-4 py-2 rounded-lg text-xs border border-warn/40 bg-warn/10 text-warn font-medium">
             Custom
           </span>
         )}
@@ -350,40 +390,44 @@ export function Planes3DPlayground() {
         <p className="text-xs text-dim leading-relaxed">{activePreset.blurb}</p>
       )}
 
-      <div className="grid lg:grid-cols-[1fr_320px] gap-4">
+      <div className="grid lg:grid-cols-[1fr_360px] gap-5">
         {/* 3D viewport */}
-        <div className="bg-card border border-line rounded-xl p-4">
-          <div className="flex items-center justify-between mb-2">
+        <div className="bg-card border border-line rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium text-ink">
               Three planes in 3D — where do they meet?
             </h3>
             <span className="text-[10px] text-faint font-mono">
-              drag to orbit · scroll to zoom
+              drag · scroll · pinch
             </span>
           </div>
-          <div className="bg-canvas border border-line rounded h-[440px] overflow-hidden relative">
-            <Canvas camera={{ position: [6, 5, 7], fov: 50 }}>
+          <div className="bg-canvas border border-line rounded-lg h-[460px] overflow-hidden relative">
+            <Canvas camera={{ position: [...DEFAULT_CAMERA_POS], fov: 50 }}>
               <ambientLight intensity={0.6} />
               <directionalLight position={[5, 5, 5]} intensity={0.7} />
               <directionalLight position={[-3, 2, -2]} intensity={0.3} />
               <gridHelper args={[6, 6, "#3a3530", "#2a2520"]} />
-              <axesHelper args={[1.5]} />
-              {/* Axis labels */}
-              <Html position={[1.7, 0, 0]} center>
-                <span className="text-[10px] font-mono text-[#ff8a8a]">
+
+              {/* Numbered axes with tick marks */}
+              <AxesWithTicks />
+
+              {/* Axis end-labels (large) */}
+              <Html position={[3.4, 0, 0]} center>
+                <span className="text-sm font-mono font-bold text-[#ff8a8a]">
                   x
                 </span>
               </Html>
-              <Html position={[0, 1.7, 0]} center>
-                <span className="text-[10px] font-mono text-[#8aff8a]">
+              <Html position={[0, 3.4, 0]} center>
+                <span className="text-sm font-mono font-bold text-[#8aff8a]">
                   y
                 </span>
               </Html>
-              <Html position={[0, 0, 1.7]} center>
-                <span className="text-[10px] font-mono text-[#8ab4ff]">
+              <Html position={[0, 0, 3.4]} center>
+                <span className="text-sm font-mono font-bold text-[#8ab4ff]">
                   z
                 </span>
               </Html>
+
               <PlaneMesh
                 normal={[a1, b1, c1]}
                 d={d1}
@@ -411,16 +455,16 @@ export function Planes3DPlayground() {
                   ]}
                 >
                   <mesh>
-                    <sphereGeometry args={[0.13, 24, 24]} />
+                    <sphereGeometry args={[0.15, 24, 24]} />
                     <meshStandardMaterial
                       color="#ffcc66"
                       emissive="#ffcc66"
-                      emissiveIntensity={0.8}
+                      emissiveIntensity={0.9}
                     />
                   </mesh>
                   <Html center distanceFactor={8}>
-                    <span className="text-[11px] font-mono text-[#ffcc66] font-semibold whitespace-nowrap bg-black/60 px-1.5 py-0.5 rounded">
-                      solution
+                    <span className="text-[11px] font-mono text-[#ffcc66] font-semibold whitespace-nowrap bg-black/70 px-1.5 py-0.5 rounded">
+                      ({solution.sol.map((s) => s.toFixed(2)).join(", ")})
                     </span>
                   </Html>
                 </group>
@@ -436,36 +480,75 @@ export function Planes3DPlayground() {
                 />
               )}
               <OrbitControls
+                ref={controlsRef as unknown as React.ComponentProps<typeof OrbitControls>["ref"]}
                 enablePan={false}
-                minDistance={4}
-                maxDistance={18}
+                minDistance={3}
+                maxDistance={20}
               />
             </Canvas>
-            {/* Legend */}
-            <div className="absolute top-2 left-2 bg-black/60 backdrop-blur rounded px-2 py-1.5 text-[10px] font-mono space-y-1 pointer-events-none">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#e8864a]" />
+
+            {/* Legend (top-left) */}
+            <div className="absolute top-3 left-3 bg-black/60 backdrop-blur rounded-lg px-3 py-2 text-[10px] font-mono space-y-1 pointer-events-none">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-sm bg-[#e8864a]" />
                 <span className="text-[#e8864a]">P1</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#6db3ff]" />
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-sm bg-[#6db3ff]" />
                 <span className="text-[#6db3ff]">P2</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#4dd9a8]" />
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-sm bg-[#4dd9a8]" />
                 <span className="text-[#4dd9a8]">P3</span>
               </div>
-              <div className="flex items-center gap-1.5 border-t border-line pt-1 mt-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#ffcc66]" />
+              <div className="flex items-center gap-2 border-t border-line pt-1 mt-1">
+                <span className="w-3 h-3 rounded-full bg-[#ffcc66]" />
                 <span className="text-[#ffcc66]">solution</span>
               </div>
+            </div>
+
+            {/* Viewport controls (bottom-right) */}
+            <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur rounded-lg p-1 flex flex-col gap-1 pointer-events-auto">
+              <button
+                type="button"
+                aria-label="Zoom in"
+                title="Zoom in"
+                onClick={() => zoom(0.75)}
+                className="w-8 h-8 rounded-md flex items-center justify-center text-faint hover:bg-white/10 hover:text-ink transition"
+              >
+                <ZoomIn size={14} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                aria-label="Zoom out"
+                title="Zoom out"
+                onClick={() => zoom(1.35)}
+                className="w-8 h-8 rounded-md flex items-center justify-center text-faint hover:bg-white/10 hover:text-ink transition"
+              >
+                <ZoomOut size={14} aria-hidden="true" />
+              </button>
+              <div className="h-px bg-white/10 my-0.5" />
+              <button
+                type="button"
+                aria-label="Reset view"
+                title="Reset view"
+                onClick={resetView}
+                className="w-8 h-8 rounded-md flex items-center justify-center text-faint hover:bg-white/10 hover:text-ink transition"
+              >
+                <Maximize2 size={13} aria-hidden="true" />
+              </button>
             </div>
           </div>
         </div>
 
         {/* Right column: equations + status */}
-        <div className="space-y-3">
-          <EquationDisplay rows={rows} />
+        <div className="space-y-4">
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-faint mb-2 font-medium">
+              The system
+            </div>
+            <EquationDisplay rows={rows} />
+          </div>
 
           <div
             className={cn(
@@ -480,7 +563,7 @@ export function Planes3DPlayground() {
           >
             {solution.type === "unique" && (
               <>
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider mb-1.5 font-medium">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider mb-2 font-semibold">
                   <Sparkles size={11} aria-hidden="true" />
                   Unique solution
                 </div>
@@ -499,7 +582,7 @@ export function Planes3DPlayground() {
             )}
             {solution.type === "infinite" && (
               <>
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider mb-1.5 font-medium">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider mb-2 font-semibold">
                   <InfIcon size={11} aria-hidden="true" />
                   Infinitely many solutions
                 </div>
@@ -512,7 +595,7 @@ export function Planes3DPlayground() {
             )}
             {solution.type === "none" && (
               <>
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider mb-1.5 font-medium">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider mb-2 font-semibold">
                   <AlertTriangle size={11} aria-hidden="true" />
                   No solution
                 </div>
@@ -527,10 +610,10 @@ export function Planes3DPlayground() {
       </div>
 
       {/* Manual sliders — for exploration */}
-      <div className="grid sm:grid-cols-3 gap-3">
-        <div className="bg-card border border-line rounded-xl p-3">
+      <div className="grid sm:grid-cols-3 gap-4">
+        <div className="bg-card border border-line rounded-xl p-4">
           <div
-            className="text-[10px] uppercase tracking-wider mb-2 font-medium"
+            className="text-[10px] uppercase tracking-wider mb-3 font-semibold"
             style={{ color: "#e8864a" }}
           >
             Plane 1 (orange)
@@ -540,9 +623,9 @@ export function Planes3DPlayground() {
           <Slider label="c" value={c1} min={-3} max={3} step={0.1} onChange={(v) => { setC1(v); onSliderChange(); }} />
           <Slider label="d" value={d1} min={-3} max={3} step={0.1} onChange={(v) => { setD1(v); onSliderChange(); }} />
         </div>
-        <div className="bg-card border border-line rounded-xl p-3">
+        <div className="bg-card border border-line rounded-xl p-4">
           <div
-            className="text-[10px] uppercase tracking-wider mb-2 font-medium"
+            className="text-[10px] uppercase tracking-wider mb-3 font-semibold"
             style={{ color: "#6db3ff" }}
           >
             Plane 2 (blue)
@@ -552,9 +635,9 @@ export function Planes3DPlayground() {
           <Slider label="c" value={c2} min={-3} max={3} step={0.1} onChange={(v) => { setC2(v); onSliderChange(); }} />
           <Slider label="d" value={d2} min={-3} max={3} step={0.1} onChange={(v) => { setD2(v); onSliderChange(); }} />
         </div>
-        <div className="bg-card border border-line rounded-xl p-3">
+        <div className="bg-card border border-line rounded-xl p-4">
           <div
-            className="text-[10px] uppercase tracking-wider mb-2 font-medium"
+            className="text-[10px] uppercase tracking-wider mb-3 font-semibold"
             style={{ color: "#4dd9a8" }}
           >
             Plane 3 (green)
@@ -566,5 +649,112 @@ export function Planes3DPlayground() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Numbered axes: each axis line + tick marks at integer positions
+// from -3 to +3, with a small number label next to each tick.
+function AxesWithTicks() {
+  const ticks = [-3, -2, -1, 1, 2, 3];
+  return (
+    <group>
+      {/* Axis lines */}
+      <Line
+        points={[
+          [-3, 0, 0],
+          [3, 0, 0],
+        ]}
+        color="#ff8a8a"
+        lineWidth={2}
+      />
+      <Line
+        points={[
+          [0, -3, 0],
+          [0, 3, 0],
+        ]}
+        color="#8aff8a"
+        lineWidth={2}
+      />
+      <Line
+        points={[
+          [0, 0, -3],
+          [0, 0, 3],
+        ]}
+        color="#8ab4ff"
+        lineWidth={2}
+      />
+
+      {/* Tick marks (small perpendicular lines) + number labels */}
+      {ticks.map((t) => (
+        <group key={`x-${t}`}>
+          <Line
+            points={[
+              [t, -0.08, 0],
+              [t, 0.08, 0],
+            ]}
+            color="#ff8a8a"
+            lineWidth={2}
+          />
+          <Html
+            position={[t, -0.32, 0]}
+            center
+            style={{ pointerEvents: "none" }}
+          >
+            <span className="text-[10px] font-mono text-[#ff8a8a]/90 leading-none">
+              {t}
+            </span>
+          </Html>
+        </group>
+      ))}
+      {ticks.map((t) => (
+        <group key={`y-${t}`}>
+          <Line
+            points={[
+              [-0.08, t, 0],
+              [0.08, t, 0],
+            ]}
+            color="#8aff8a"
+            lineWidth={2}
+          />
+          <Html
+            position={[-0.36, t, 0]}
+            center
+            style={{ pointerEvents: "none" }}
+          >
+            <span className="text-[10px] font-mono text-[#8aff8a]/90 leading-none">
+              {t}
+            </span>
+          </Html>
+        </group>
+      ))}
+      {ticks.map((t) => (
+        <group key={`z-${t}`}>
+          <Line
+            points={[
+              [-0.08, 0, t],
+              [0.08, 0, t],
+            ]}
+            color="#8ab4ff"
+            lineWidth={2}
+          />
+          <Html
+            position={[-0.36, 0, t]}
+            center
+            style={{ pointerEvents: "none" }}
+          >
+            <span className="text-[10px] font-mono text-[#8ab4ff]/90 leading-none">
+              {t}
+            </span>
+          </Html>
+        </group>
+      ))}
+
+      {/* Origin marker */}
+      <Html position={[0, 0, 0]} center style={{ pointerEvents: "none" }}>
+        <span className="text-[10px] font-mono text-faint leading-none">
+          0
+        </span>
+      </Html>
+    </group>
   );
 }
