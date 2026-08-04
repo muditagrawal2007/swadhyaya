@@ -13,6 +13,9 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
+  Info,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 // Concept L3: Three equations in three unknowns.
@@ -301,7 +304,7 @@ type OrbitHandle = {
     [a3, b3, c3, d3],
   ];
 
-  const solution = useMemo(() => {
+  const rrefResult = useMemo(() => {
     const A = [
       [a1, b1, c1],
       [a2, b2, c2],
@@ -309,7 +312,11 @@ type OrbitHandle = {
     ];
     const b = [d1, d2, d3];
     const aug = A.map((row, i) => [...row, b[i]]);
-    const { rref, pivots } = matRref(aug);
+    return matRref(aug);
+  }, [a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]);
+
+  const solution = useMemo(() => {
+    const { rref, pivots } = rrefResult;
     const n = 3;
     for (const row of rref) {
       const leftZero = row.slice(0, n).every((v) => Math.abs(v) < 1e-9);
@@ -326,7 +333,7 @@ type OrbitHandle = {
       }
     }
     return { type: "unique" as const, sol };
-  }, [a1, b1, c1, d1, a2, b2, c2, d2, a3, b3, c3, d3]);
+  }, [rrefResult]);
 
   // For the "line of solutions" case, draw a line along the free variable.
   const linePoints = useMemo<[number, number, number][] | null>(() => {
@@ -361,6 +368,8 @@ type OrbitHandle = {
 
   const activePreset = PRESETS.find((p) => p.id === presetId);
 
+  const [showDetails, setShowDetails] = useState(true);
+
   return (
     <div className="space-y-5">
       {/* Preset buttons */}
@@ -389,6 +398,39 @@ type OrbitHandle = {
       {activePreset && presetId !== "custom" && (
         <p className="text-xs text-dim leading-relaxed">{activePreset.blurb}</p>
       )}
+
+      {/* What's-happening toggle + deep table */}
+      <div className="bg-card border border-line rounded-xl overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setShowDetails(!showDetails)}
+          className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-elev/30 transition"
+          aria-expanded={showDetails}
+        >
+          <div className="flex items-center gap-2">
+            <Info size={14} className="text-accent" aria-hidden="true" />
+            <span className="text-sm font-medium text-ink">
+              What&apos;s happening — the math behind the picture
+            </span>
+          </div>
+          <span className="text-faint">
+            {showDetails ? (
+              <ChevronUp size={16} aria-hidden="true" />
+            ) : (
+              <ChevronDown size={16} aria-hidden="true" />
+            )}
+          </span>
+        </button>
+        {showDetails && (
+          <DetailsTable
+            rows={rows}
+            rref={rrefResult.rref}
+            pivots={rrefResult.pivots}
+            rank={rrefResult.rank}
+            solution={solution}
+          />
+        )}
+      </div>
 
       <div className="grid lg:grid-cols-[1fr_360px] gap-5">
         {/* 3D viewport */}
@@ -756,5 +798,285 @@ function AxesWithTicks() {
         </span>
       </Html>
     </group>
+  );
+}
+
+// Deep explanation table — shows the full state of the linear system
+// in a structured, scannable form. Updates live as the student drags
+// any of the 12 sliders.
+function DetailsTable({
+  rows,
+  rref,
+  pivots,
+  rank,
+  solution,
+}: {
+  rows: [number, number, number, number][];
+  rref: number[][];
+  pivots: number[];
+  rank: number;
+  solution:
+    | { type: "unique"; sol: number[] }
+    | { type: "infinite"; rank: number }
+    | { type: "none" };
+}) {
+  const fmt = (v: number) => {
+    if (Math.abs(v) < 1e-6) return "0";
+    const rounded = Math.round(v * 100) / 100;
+    return Number.isInteger(rounded) ? `${rounded}` : `${rounded.toFixed(2)}`;
+  };
+  const fmtVec = (v: number) => {
+    if (Math.abs(v) < 1e-6) return "0";
+    const rounded = Math.round(v * 100) / 100;
+    return Number.isInteger(rounded) ? `${rounded}` : `${rounded.toFixed(2)}`;
+  };
+  const colors = ["#e8864a", "#6db3ff", "#4dd9a8"];
+  const labels = ["P1", "P2", "P3"];
+
+  // Per-plane geometry
+  const planeInfo = rows.map((r, i) => {
+    const [a, b, c, d] = r;
+    const nLen = Math.hypot(a, b, c);
+    const isDegenerate = nLen < 1e-9;
+    const distFromOrigin = isDegenerate ? null : Math.abs(d) / nLen;
+    return { a, b, c, d, nLen, isDegenerate, distFromOrigin };
+  });
+
+  // Free variable index for the infinite case
+  const freeCol = rank < 3 ? rank : null;
+
+  return (
+    <div className="border-t border-line bg-elev/20 divide-y divide-line text-xs">
+      {/* TABLE 1 — Augmented matrix [A | b] */}
+      <div className="px-5 py-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-faint font-medium">
+            Augmented matrix
+          </span>
+          <span className="font-mono text-dim">[ A &nbsp;|&nbsp; b ]</span>
+          <span className="ml-auto text-[10px] text-faint">
+            click a slider to see this update
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="font-mono text-xs border-collapse">
+            <thead>
+              <tr className="text-faint">
+                <th className="pr-3 text-right font-normal">row</th>
+                <th className="px-2 text-center font-normal">x</th>
+                <th className="px-2 text-center font-normal">y</th>
+                <th className="px-2 text-center font-normal">z</th>
+                <th className="px-2 text-center font-normal">=</th>
+                <th className="px-2 text-left font-normal">d</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={i}>
+                  <td
+                    className="pr-3 text-right font-medium"
+                    style={{ color: colors[i] }}
+                  >
+                    {labels[i]}
+                  </td>
+                  <td className="px-2 text-center text-dim">{fmt(r[0])}</td>
+                  <td className="px-2 text-center text-dim">{fmt(r[1])}</td>
+                  <td className="px-2 text-center text-dim">{fmt(r[2])}</td>
+                  <td className="px-2 text-center text-faint">=</td>
+                  <td className="px-2 text-ink">{fmt(r[3])}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* TABLE 2 — RREF */}
+      <div className="px-5 py-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-faint font-medium">
+            Reduced row echelon form
+          </span>
+          <span className="font-mono text-dim">[ R &nbsp;|&nbsp; d&apos; ]</span>
+          <span className="ml-auto text-[10px] text-faint">
+            pivots highlighted
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="font-mono text-xs border-collapse">
+            <thead>
+              <tr className="text-faint">
+                <th className="pr-3 text-right font-normal">row</th>
+                <th className="px-2 text-center font-normal">x</th>
+                <th className="px-2 text-center font-normal">y</th>
+                <th className="px-2 text-center font-normal">z</th>
+                <th className="px-2 text-left font-normal">d&apos;</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rref.map((row, i) => (
+                <tr key={i}>
+                  <td className="pr-3 text-right text-faint">R{i + 1}</td>
+                  {row.map((v, j) => {
+                    const isPivot =
+                      pivots[i] === j && Math.abs(v) > 1e-6;
+                    const isZero = Math.abs(v) < 1e-6;
+                    return (
+                      <td
+                        key={j}
+                        className={cn(
+                          "px-2 text-center",
+                          isPivot
+                            ? "text-accent font-bold"
+                            : isZero
+                              ? "text-faint"
+                              : "text-ink",
+                        )}
+                      >
+                        {isPivot ? "1" : fmt(v)}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* TABLE 3 — Per-plane geometry */}
+      <div className="px-5 py-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-faint font-medium">
+            Per-plane geometry
+          </span>
+          <span className="font-mono text-dim">
+            n̂ = normal vector · |d|/||n̂|| = distance from origin
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="font-mono text-xs border-collapse w-full">
+            <thead>
+              <tr className="text-faint">
+                <th className="pr-3 text-right font-normal text-left">plane</th>
+                <th className="px-2 text-left font-normal">normal n̂</th>
+                <th className="px-2 text-right font-normal">||n̂||</th>
+                <th className="px-2 text-right font-normal">dist from origin</th>
+                <th className="px-2 text-left font-normal">status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {planeInfo.map((p, i) => (
+                <tr key={i}>
+                  <td
+                    className="pr-3 text-right font-medium"
+                    style={{ color: colors[i] }}
+                  >
+                    {labels[i]}
+                  </td>
+                  <td className="px-2 text-ink">
+                    ({fmtVec(p.a)}, {fmtVec(p.b)}, {fmtVec(p.c)})
+                  </td>
+                  <td className="px-2 text-right text-dim">
+                    {p.isDegenerate ? "—" : p.nLen.toFixed(2)}
+                  </td>
+                  <td className="px-2 text-right text-dim">
+                    {p.distFromOrigin === null
+                      ? "—"
+                      : p.distFromOrigin.toFixed(2)}
+                  </td>
+                  <td className="px-2 text-left text-faint">
+                    {p.isDegenerate ? "degenerate (a=b=c=0)" : "valid plane"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* TABLE 4 — System verdict */}
+      <div className="px-5 py-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[10px] uppercase tracking-wider text-faint font-medium">
+            System verdict
+          </span>
+          <span className="ml-auto text-[10px] text-faint">
+            rank = {rank} of 3
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="font-mono text-xs border-collapse">
+            <tbody>
+              <tr>
+                <td className="pr-3 text-faint text-right">rank</td>
+                <td className="px-2 text-ink">{rank}</td>
+                <td className="px-3 text-faint">/3</td>
+                <td className="px-2 text-faint text-xs">
+                  {rank === 3
+                    ? "→ full rank, 3 pivots"
+                    : rank === 2
+                      ? "→ rank-deficient, 2 pivots"
+                      : rank === 1
+                        ? "→ 1 pivot"
+                        : "→ no pivots"}
+                </td>
+              </tr>
+              <tr>
+                <td className="pr-3 text-faint text-right">pivot cols</td>
+                <td className="px-2 text-ink">
+                  {pivots.length === 0 ? "—" : pivots.map((p) => p + 1).join(", ")}
+                </td>
+                <td className="px-3 text-faint">
+                  {pivots.length === 0 ? "" : "1-indexed"}
+                </td>
+                <td className="px-2 text-faint text-xs">
+                  {pivots.length < 3
+                    ? `free variable = ${freeCol !== null ? `t${"xyz"[freeCol]}` : "—"}`
+                    : "all variables are pivots"}
+                </td>
+              </tr>
+              <tr>
+                <td className="pr-3 text-faint text-right">solution</td>
+                <td className="px-2 text-ink">
+                  {solution.type === "unique"
+                    ? `(x, y, z) = (${solution.sol.map(fmtVec).join(", ")})`
+                    : solution.type === "infinite"
+                      ? "infinitely many"
+                      : "no solution"}
+                </td>
+                <td className="px-3"></td>
+                <td className="px-2 text-faint text-xs">
+                  {solution.type === "unique"
+                    ? "the gold sphere in the picture"
+                    : solution.type === "infinite"
+                      ? "the dashed gold line in the picture"
+                      : "planes contradict each other"}
+                </td>
+              </tr>
+              <tr>
+                <td className="pr-3 text-faint text-right">determinant</td>
+                <td className="px-2 text-ink">
+                  {(() => {
+                    const [a1, b1, c1] = rows[0];
+                    const [a2, b2, c2] = rows[1];
+                    const [a3, b3, c3] = rows[2];
+                    const det =
+                      a1 * (b2 * c3 - b3 * c2) -
+                      b1 * (a2 * c3 - a3 * c2) +
+                      c1 * (a2 * b3 - a3 * b2);
+                    return det.toFixed(2);
+                  })()}
+                </td>
+                <td className="px-3 text-faint">det(A)</td>
+                <td className="px-2 text-faint text-xs">
+                  = 0 means rank &lt; 3
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 }
