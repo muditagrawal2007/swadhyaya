@@ -36,7 +36,7 @@ const fireConfetti = async () => {
   });
 };
 
-type Tab = "story" | "play" | "test" | "whyCare" | "strang" | "connect";
+type Tab = "story" | "play" | "test" | "connect";
 
 export function ConceptPage({ id }: { id: ConceptId }) {
   const router = useRouter();
@@ -66,9 +66,7 @@ export function ConceptPage({ id }: { id: ConceptId }) {
         "1": "story",
         "2": "play",
         "3": "test",
-        "4": concept.whyCare ? "whyCare" : "",
-        "5": concept.strang ? "strang" : "",
-        "6": concept.prereqs.length > 0 ? "connect" : "",
+        "4": concept.prereqs.length > 0 ? "connect" : "",
       };
       const next = map[e.key];
       if (next) {
@@ -80,7 +78,7 @@ export function ConceptPage({ id }: { id: ConceptId }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [concept.whyCare, concept.strang, concept.prereqs.length, router]);
+  }, [concept.prereqs.length, router]);
 
   const phaseMeta = useMemo(
     () => PHASES.find((p) => p.id === concept.phase)!,
@@ -233,31 +231,11 @@ export function ConceptPage({ id }: { id: ConceptId }) {
         >
           Test
         </TabButton>
-        {concept.whyCare && (
-          <TabButton
-            active={tab === "whyCare"}
-            onClick={() => setTab("whyCare")}
-            n={4}
-            id="tab-why"
-          >
-            Why care
-          </TabButton>
-        )}
-        {concept.strang && (
-          <TabButton
-            active={tab === "strang"}
-            onClick={() => setTab("strang")}
-            n={5}
-            id="tab-strang"
-          >
-            Formal layer
-          </TabButton>
-        )}
         {concept.prereqs.length > 0 && (
           <TabButton
             active={tab === "connect"}
             onClick={() => setTab("connect")}
-            n={6}
+            n={4}
             id="tab-connect"
           >
             Connect
@@ -270,7 +248,7 @@ export function ConceptPage({ id }: { id: ConceptId }) {
         )}
         <span className="ml-auto hidden lg:inline-flex items-center gap-2 text-[10px] text-faint font-mono">
           <kbd className="px-1.5 py-0.5 rounded border border-line bg-elev/50">
-            1–6
+            1–4
           </kbd>
           tabs
           <kbd className="px-1.5 py-0.5 rounded border border-line bg-elev/50 ml-1">
@@ -282,10 +260,6 @@ export function ConceptPage({ id }: { id: ConceptId }) {
 
       {tab === "story" && <StoryTab story={concept.story} />}
       {tab === "play" && <Playground id={concept.playground} />}
-      {tab === "whyCare" && concept.whyCare && (
-        <WhyCareTab text={concept.whyCare} />
-      )}
-      {tab === "strang" && concept.strang && <StrangTab text={concept.strang} />}
       {tab === "connect" && (
         <ConnectTab
           prereqs={concept.prereqs}
@@ -375,37 +349,6 @@ function StoryTab({ story }: { story: string }) {
           </ul>
         </div>
       </div>
-    </div>
-  );
-}
-
-function WhyCareTab({ text }: { text: string }) {
-  return (
-    <div className="bg-card border border-line rounded-xl p-6">
-      <div className="text-[10px] text-warn uppercase tracking-wider mb-3 flex items-center gap-1.5">
-        <Sparkles size={11} aria-hidden="true" /> Why should you care?
-      </div>
-      <p className="font-serif text-lg leading-relaxed text-ink/90">{text}</p>
-      <p className="text-xs text-dim mt-4">
-        The intuition you build here shows up everywhere. The playground is the
-        practice. Now open the playground tab and play.
-      </p>
-    </div>
-  );
-}
-
-function StrangTab({ text }: { text: string }) {
-  return (
-    <div className="bg-card border border-line rounded-xl p-6">
-      <div className="text-[10px] text-faint uppercase tracking-wider mb-3 flex items-center gap-1.5">
-        Formal layer · Gilbert Strang
-      </div>
-      <p className="font-serif text-base leading-relaxed text-ink/90">{text}</p>
-      <p className="text-xs text-dim mt-4">
-        The interactive playground above IS the geometry Strang describes in
-        symbols. Watch the picture move, then read the algebra — same idea, two
-        languages.
-      </p>
     </div>
   );
 }

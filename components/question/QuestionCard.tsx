@@ -134,6 +134,18 @@ export function QuestionCard({
             } else {
               cls = "border-line bg-elev/20 text-dim opacity-50";
             }
+          } else if (isSelected) {
+            // Pre-submit: highlight the currently-picked option so the
+            // student has a clear visual confirmation of their choice.
+            cls =
+              "border-accent bg-accent/15 text-ink font-medium ring-1 ring-accent/40";
+            icon = (
+              <Check
+                size={14}
+                className="inline ml-2 -mt-0.5 text-accent"
+                aria-hidden="true"
+              />
+            );
           }
           return (
             <label
