@@ -3,6 +3,12 @@ import { useState, useMemo } from "react";
 import { VectorCanvas } from "@/components/viz/VectorCanvas";
 import { Slider } from "./Slider";
 import { matMul, matTranspose, matMulVec, m2eigen, fmt } from "@/lib/math";
+import {
+  PlaygroundExplanation,
+  ExplanationSection,
+  ExplanationTable,
+  ExplanationRow,
+} from "./PlaygroundExplanation";
 
 // Concept S1: SVD — Every Matrix is Rotate-Scale-Rotate.
 // Three ways to feel the decomposition:
@@ -126,6 +132,7 @@ export function SVDPlayground() {
   ]);
 
   return (
+    <div className="space-y-4">
     <div className="bg-card border border-line rounded-xl p-4">
       <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
         <h3 className="text-sm font-medium text-ink">
@@ -312,6 +319,86 @@ export function SVDPlayground() {
           <NumberSlider label="d" value={d} onChange={setD} />
         </div>
       </div>
+    </div>
+
+    <PlaygroundExplanation title="What's happening — the SVD decomposition">
+      <ExplanationSection label="A = U Σ Vᵀ">
+        <ExplanationTable>
+          <tbody>
+            <ExplanationRow
+              label="A (your matrix)"
+              value={
+                <span>
+                  [<span className="text-vector">{fmt(a)}</span>,{" "}
+                  <span className="text-matrix">{fmt(b)}</span>;{" "}
+                  <span className="text-eigen">{fmt(c)}</span>,{" "}
+                  <span className="text-singular">{fmt(d)}</span>]
+                </span>
+              }
+              hint="what you're dragging"
+            />
+            <ExplanationRow
+              label="det(A)"
+              value={
+                <span className="text-ink">{fmt(a * d - b * c, 3)}</span>
+              }
+              hint="signed area scale of the transformation"
+            />
+            <ExplanationRow
+              label="trace(A)"
+              value={
+                <span className="text-ink">{fmt(a + d, 3)}</span>
+              }
+              hint="sum of eigenvalues / singular values"
+            />
+          </tbody>
+        </ExplanationTable>
+      </ExplanationSection>
+
+      <ExplanationSection label="Singular values Σ">
+        <ExplanationTable>
+          <tbody>
+            <ExplanationRow
+              label="σ₁ (largest)"
+              value={<span className="text-accent">{fmt(singularValues[0] ?? 0, 3)}</span>}
+              hint="how much the unit circle stretches along its longest axis"
+            />
+            <ExplanationRow
+              label="σ₂ (smallest)"
+              value={<span className="text-accent">{fmt(singularValues[1] ?? 0, 3)}</span>}
+              hint="how much it stretches along the perpendicular axis"
+            />
+            <ExplanationRow
+              label="rank"
+              value={
+                <span
+                  className={
+                    singularValues[0] && singularValues[0] > 1e-6 ? "text-accent" : "text-warn"
+                  }
+                >
+                  {(singularValues[0] ?? 0) > 1e-6 ? 2 : 0}
+                </span>
+              }
+              hint="non-zero singular values → rank 2"
+            />
+            <ExplanationRow
+              label="det = σ₁ · σ₂"
+              value={<span className="text-accent">{fmt((singularValues[0] ?? 0) * (singularValues[1] ?? 0), 3)}</span>}
+              hint="matches det(A) above"
+            />
+          </tbody>
+        </ExplanationTable>
+      </ExplanationSection>
+
+      <ExplanationSection label="Geometric meaning">
+        <p className="text-dim leading-relaxed">
+          The unit circle (left) gets rotated by Vᵀ, scaled by σ₁ and σ₂
+          along the new axes, then rotated by U to land on the green
+          ellipse (right). Three simple pieces compose to any 2×2 linear
+          map.
+        </p>
+      </ExplanationSection>
+    </PlaygroundExplanation>
     </div>
   );
 }

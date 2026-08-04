@@ -2,6 +2,12 @@
 import { useState, useMemo } from "react";
 import { m2det, fmt } from "@/lib/math";
 import { ArrowRight, RotateCcw, Shuffle, Scaling, Plus } from "lucide-react";
+import {
+  PlaygroundExplanation,
+  ExplanationSection,
+  ExplanationTable,
+  ExplanationRow,
+} from "./PlaygroundExplanation";
 
 // Concept L5: Row Operations — Multiply, Swap, Add
 // "Three moves that don't change the answer. Master the toolkit before you use it."
@@ -31,7 +37,6 @@ export function RowOpsPlayground() {
   };
   const addRow = (from: number, to: number, k: number) => {
     if (from === to) return;
-    // from*k added to to
     if (from === 0) {
       if (swap) {
         if (to === 1) { setA(a + c * k); setB(b + d * k); }
@@ -48,7 +53,6 @@ export function RowOpsPlayground() {
   };
   const reset = () => { setA(1); setB(1); setC(1); setD(1); setSwap(false); };
 
-  // The "answer" we're solving for
   const b1 = 5, b2 = 3;
   const m11 = M[0]?.[0] ?? 0;
   const m12 = M[0]?.[1] ?? 0;
@@ -56,102 +60,208 @@ export function RowOpsPlayground() {
   const m22 = M[1]?.[1] ?? 0;
   const x = (m22 * b1 - m12 * b2) / det;
   const y = (-m21 * b1 + m11 * b2) / det;
+  const isDegenerate = Math.abs(det) < 0.1;
 
   return (
-    <div className="bg-card border border-line rounded-xl p-4">
-      <h3 className="text-sm font-medium text-ink mb-2">
-        Three moves that don't change the answer
-      </h3>
-      <p className="text-xs text-dim mb-4">
-        Solve: x + y = 5, x + y = 3. Wait — they have the same slope! The lines
-        are parallel. Use row operations to make the structure visible.
-      </p>
+    <div className="space-y-4">
+      <div className="bg-card border border-line rounded-xl p-4">
+        <h3 className="text-sm font-medium text-ink mb-2">
+          Three moves that don't change the answer
+        </h3>
+        <p className="text-xs text-dim mb-4">
+          Solve: x + y = 5, x + y = 3. Wait — they have the same slope! The lines
+          are parallel. Use row operations to make the structure visible.
+        </p>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        {/* Matrix A */}
-        <div>
-          <div className="text-[10px] text-faint uppercase tracking-wider mb-2">Your matrix [A | b]</div>
-          <div className="bg-canvas border border-line rounded-md p-3 font-mono text-sm space-y-1">
-            {M.map((row, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className="text-faint text-xs w-6">R{i + 1}</span>
-                <span className="text-ink">[</span>
-                <span className="text-vector w-8 text-right">{fmt(row[0])}</span>
-                <span className="text-matrix w-8 text-right">{fmt(row[1])}</span>
-                <span className="text-faint">|</span>
-                <span className="text-accent w-8 text-right">{fmt(i === 0 ? b1 : b2)}</span>
-                <span className="text-ink">]</span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-2 text-[10px] text-faint">
-            det = {fmt(det, 3)} {Math.abs(det) < 0.1 && "(≈ 0 — the system is degenerate)"}
-          </div>
-        </div>
-
-        {/* Operations */}
-        <div className="space-y-2">
-          <div className="bg-elev/30 border border-line rounded-md p-3">
-            <div className="flex items-center gap-1.5 text-[10px] text-faint uppercase tracking-wider mb-2">
-              <Shuffle size={11} /> 1. Swap rows
+        <div className="grid md:grid-cols-2 gap-4">
+          {/* Matrix A */}
+          <div>
+            <div className="text-[10px] text-faint uppercase tracking-wider mb-2">Your matrix [A | b]</div>
+            <div className="bg-canvas border border-line rounded-md p-3 font-mono text-sm space-y-1">
+              {M.map((row, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="text-faint text-xs w-6">R{i + 1}</span>
+                  <span className="text-ink">[</span>
+                  <span className="text-vector w-8 text-right">{fmt(row[0])}</span>
+                  <span className="text-matrix w-8 text-right">{fmt(row[1])}</span>
+                  <span className="text-faint">|</span>
+                  <span className="text-accent w-8 text-right">{fmt(i === 0 ? b1 : b2)}</span>
+                  <span className="text-ink">]</span>
+                </div>
+              ))}
             </div>
+            <div className="mt-2 text-[10px] text-faint">
+              det = {fmt(det, 3)} {isDegenerate && "(≈ 0 — the system is degenerate)"}
+            </div>
+          </div>
+
+          {/* Operations */}
+          <div className="space-y-2">
+            <div className="bg-elev/30 border border-line rounded-md p-3">
+              <div className="flex items-center gap-1.5 text-[10px] text-faint uppercase tracking-wider mb-2">
+                <Shuffle size={11} /> 1. Swap rows
+              </div>
+              <button
+                onClick={() => setSwap(!swap)}
+                className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60"
+              >
+                R1 ↔ R2 {!swap ? "(swap)" : "(unswap)"}
+              </button>
+            </div>
+
+            <div className="bg-elev/30 border border-line rounded-md p-3">
+              <div className="flex items-center gap-1.5 text-[10px] text-faint uppercase tracking-wider mb-2">
+                <Scaling size={11} /> 2. Scale a row
+              </div>
+              <div className="grid grid-cols-2 gap-1">
+                <button onClick={() => scaleRow(0, 2)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R1 × 2</button>
+                <button onClick={() => scaleRow(0, 0.5)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R1 ÷ 2</button>
+                <button onClick={() => scaleRow(1, 2)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R2 × 2</button>
+                <button onClick={() => scaleRow(1, 0.5)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R2 ÷ 2</button>
+              </div>
+            </div>
+
+            <div className="bg-elev/30 border border-line rounded-md p-3">
+              <div className="flex items-center gap-1.5 text-[10px] text-faint uppercase tracking-wider mb-2">
+                <Plus size={11} /> 3. Add a multiple
+              </div>
+              <div className="grid grid-cols-2 gap-1">
+                <button onClick={() => addRow(0, 1, -1)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R2 − R1</button>
+                <button onClick={() => addRow(0, 1, 1)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R2 + R1</button>
+                <button onClick={() => addRow(1, 0, -1)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R1 − R2</button>
+                <button onClick={() => addRow(1, 0, 1)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R1 + R2</button>
+              </div>
+            </div>
+
             <button
-              onClick={() => setSwap(!swap)}
-              className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60"
+              onClick={reset}
+              className="w-full text-xs text-dim hover:text-ink flex items-center justify-center gap-1 py-1.5 border border-line rounded-md"
             >
-              R1 ↔ R2 {!swap ? "(swap)" : "(unswap)"}
+              <RotateCcw size={11} /> Reset
             </button>
           </div>
+        </div>
 
-          <div className="bg-elev/30 border border-line rounded-md p-3">
-            <div className="flex items-center gap-1.5 text-[10px] text-faint uppercase tracking-wider mb-2">
-              <Scaling size={11} /> 2. Scale a row
-            </div>
-            <div className="grid grid-cols-2 gap-1">
-              <button onClick={() => scaleRow(0, 2)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R1 × 2</button>
-              <button onClick={() => scaleRow(0, 0.5)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R1 ÷ 2</button>
-              <button onClick={() => scaleRow(1, 2)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R2 × 2</button>
-              <button onClick={() => scaleRow(1, 0.5)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R2 ÷ 2</button>
-            </div>
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          <div className="bg-elev/30 rounded-md p-2 text-center">
+            <div className="text-[10px] text-faint uppercase tracking-wider">x</div>
+            <div className="font-mono text-sm text-ink">{isFinite(x) ? fmt(x, 3) : "—"}</div>
           </div>
-
-          <div className="bg-elev/30 border border-line rounded-md p-3">
-            <div className="flex items-center gap-1.5 text-[10px] text-faint uppercase tracking-wider mb-2">
-              <Plus size={11} /> 3. Add a multiple
-            </div>
-            <div className="grid grid-cols-2 gap-1">
-              <button onClick={() => addRow(0, 1, -1)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R2 − R1</button>
-              <button onClick={() => addRow(0, 1, 1)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R2 + R1</button>
-              <button onClick={() => addRow(1, 0, -1)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R1 − R2</button>
-              <button onClick={() => addRow(1, 0, 1)} className="text-xs px-2 py-1 rounded border border-line hover:bg-elev/60">R1 + R2</button>
-            </div>
+          <div className="bg-elev/30 rounded-md p-2 text-center">
+            <div className="text-[10px] text-faint uppercase tracking-wider">y</div>
+            <div className="font-mono text-sm text-ink">{isFinite(y) ? fmt(y, 3) : "—"}</div>
           </div>
-
-          <button
-            onClick={reset}
-            className="w-full text-xs text-dim hover:text-ink flex items-center justify-center gap-1 py-1.5 border border-line rounded-md"
-          >
-            <RotateCcw size={11} /> Reset
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        <div className="bg-elev/30 rounded-md p-2 text-center">
-          <div className="text-[10px] text-faint uppercase tracking-wider">x</div>
-          <div className="font-mono text-sm text-ink">{isFinite(x) ? fmt(x, 3) : "—"}</div>
-        </div>
-        <div className="bg-elev/30 rounded-md p-2 text-center">
-          <div className="text-[10px] text-faint uppercase tracking-wider">y</div>
-          <div className="font-mono text-sm text-ink">{isFinite(y) ? fmt(y, 3) : "—"}</div>
-        </div>
-        <div className="bg-elev/30 rounded-md p-2 text-center">
-          <div className="text-[10px] text-faint uppercase tracking-wider">status</div>
-          <div className="text-[10px] mt-1" style={{ color: Math.abs(det) < 0.1 ? "var(--warn)" : "var(--accent)" }}>
-            {Math.abs(det) < 0.1 ? "no / ∞" : "unique"}
+          <div className="bg-elev/30 rounded-md p-2 text-center">
+            <div className="text-[10px] text-faint uppercase tracking-wider">status</div>
+            <div className="text-[10px] mt-1" style={{ color: isDegenerate ? "var(--warn)" : "var(--accent)" }}>
+              {isDegenerate ? "no / ∞" : "unique"}
+            </div>
           </div>
         </div>
       </div>
+
+      <PlaygroundExplanation title="What's happening to the matrix">
+        <ExplanationSection label="Current matrix [A | b]">
+          <ExplanationTable>
+            <tbody>
+              <ExplanationRow
+                label="R1"
+                value={
+                  <span>
+                    [<span className="text-vector">{fmt(M[0][0])}</span>,{" "}
+                    <span className="text-matrix">{fmt(M[0][1])}</span> |{" "}
+                    <span className="text-accent">{fmt(b1)}</span>]
+                  </span>
+                }
+                hint={swap ? "originally was R2" : "originally was R1"}
+              />
+              <ExplanationRow
+                label="R2"
+                value={
+                  <span>
+                    [<span className="text-vector">{fmt(M[1][0])}</span>,{" "}
+                    <span className="text-matrix">{fmt(M[1][1])}</span> |{" "}
+                    <span className="text-accent">{fmt(b2)}</span>]
+                  </span>
+                }
+                hint={swap ? "originally was R1" : "originally was R2"}
+              />
+              <ExplanationRow
+                label="det"
+                value={
+                  <span className={isDegenerate ? "text-warn" : "text-accent"}>
+                    {fmt(det, 3)}
+                  </span>
+                }
+                hint={
+                  isDegenerate
+                    ? "≈ 0 — system is degenerate (parallel / coincident)"
+                    : "non-zero — unique solution"
+                }
+              />
+            </tbody>
+          </ExplanationTable>
+        </ExplanationSection>
+
+        <ExplanationSection label="Inverse formula (Cramer's rule)">
+          <ExplanationTable>
+            <tbody>
+              <ExplanationRow
+                label="A⁻¹ = 1/det"
+                value={
+                  <span className="text-matrix">
+                    1/{fmt(det, 3)} ·{" "}
+                    <span>
+                      [<span className="text-accent">{fmt(m22)}</span>,{" "}
+                      <span className="text-warn">−{fmt(m12)}</span>;{" "}
+                      <span className="text-warn">−{fmt(m21)}</span>,{" "}
+                      <span className="text-accent">{fmt(m11)}</span>]
+                    </span>
+                  </span>
+                }
+              />
+              <ExplanationRow
+                label="x ="
+                value={
+                  <span className={isDegenerate ? "text-warn" : "text-accent"}>
+                    {isFinite(x) ? fmt(x, 3) : "—"}
+                  </span>
+                }
+                hint={
+                  isFinite(x)
+                    ? `(det·${fmt(b1)} − ${fmt(m12)}·${fmt(b2)}) / ${fmt(det, 3)}`
+                    : "undefined — system is degenerate"
+                }
+              />
+              <ExplanationRow
+                label="y ="
+                value={
+                  <span className={isDegenerate ? "text-warn" : "text-accent"}>
+                    {isFinite(y) ? fmt(y, 3) : "—"}
+                  </span>
+                }
+                hint={
+                  isFinite(y)
+                    ? `(−${fmt(m21)}·${fmt(b1)} + det·${fmt(b2)}) / ${fmt(det, 3)}`
+                    : "undefined — system is degenerate"
+                }
+              />
+            </tbody>
+          </ExplanationTable>
+        </ExplanationSection>
+
+        <ExplanationSection label="Why row operations don't change the answer">
+          <p className="text-dim leading-relaxed">
+            Swapping two equations doesn't change which (x, y) satisfies both —
+            only the order they're written in. Scaling an equation by a
+            non-zero number multiplies both sides equally, so the same (x, y)
+            still satisfies it. Adding a multiple of one equation to another
+            preserves the solution because the new equation is just "old LHS
+            + k · old LHS = old RHS + k · old RHS" — if (x, y) satisfied
+            the originals, it satisfies the new one too.
+          </p>
+        </ExplanationSection>
+      </PlaygroundExplanation>
     </div>
   );
 }
