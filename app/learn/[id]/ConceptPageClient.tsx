@@ -6,6 +6,7 @@ import {
   CONCEPT_BY_ID,
   PHASES,
   getNextConceptId,
+  getPrevConceptId,
   getUnlocked,
   type ConceptId,
 } from "@/lib/curriculum";
@@ -87,9 +88,14 @@ export function ConceptPage({ id }: { id: ConceptId }) {
   );
 
   const nextId = useMemo(() => getNextConceptId(concept.id), [concept.id]);
+  const prevId = useMemo(() => getPrevConceptId(concept.id), [concept.id]);
   const nextConcept = nextId ? CONCEPT_BY_ID[nextId] : null;
+  const prevConcept = prevId ? CONCEPT_BY_ID[prevId] : null;
   const nextUnlocked = nextId
     ? getUnlocked(new Set(completed)).has(nextId)
+    : false;
+  const prevUnlocked = prevId
+    ? getUnlocked(new Set(completed)).has(prevId)
     : false;
 
   if (!isUnlocked) {
@@ -145,20 +151,54 @@ export function ConceptPage({ id }: { id: ConceptId }) {
       </Link>
 
       <header className="mb-6">
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <span
-            className="text-[10px] font-mono px-1.5 py-0.5 rounded"
-            style={{ background: `${phaseMeta.color}20`, color: phaseMeta.color }}
-          >
-            {concept.id}
-          </span>
-          <span className="text-[10px] text-faint uppercase tracking-wider">
-            Phase {concept.phase} · {phaseMeta.title}
-          </span>
-          <span className="text-[10px] text-faint" aria-hidden="true">
-            ·
-          </span>
-          <span className="text-[10px] text-warn">+{concept.xp} XP</span>
+        <div className="flex items-center justify-between gap-4 mb-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+              style={{ background: `${phaseMeta.color}20`, color: phaseMeta.color }}
+            >
+              {concept.id}
+            </span>
+            <span className="text-[10px] text-faint uppercase tracking-wider">
+              Phase {concept.phase} · {phaseMeta.title}
+            </span>
+            <span className="text-[10px] text-faint" aria-hidden="true">
+              ·
+            </span>
+            <span className="text-[10px] text-warn">+{concept.xp} XP</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {prevConcept && (
+              <Link
+                href={`/learn/${prevConcept.id}`}
+                className={cn(
+                  "inline-flex items-center gap-1 text-xs px-2 py-1 rounded border transition",
+                  prevUnlocked
+                    ? "border-line hover:bg-elev text-dim hover:text-ink"
+                    : "border-line/50 text-faint hover:text-dim",
+                )}
+                aria-label={`Previous story: ${prevConcept.title}`}
+              >
+                <ArrowLeft size={12} aria-hidden="true" />
+                <span className="font-mono text-[10px]">{prevConcept.id}</span>
+              </Link>
+            )}
+            {nextConcept && (
+              <Link
+                href={`/learn/${nextConcept.id}`}
+                className={cn(
+                  "inline-flex items-center gap-1 text-xs px-2 py-1 rounded border transition",
+                  nextUnlocked
+                    ? "border-accent/40 bg-accent/10 text-accent hover:bg-accent/20"
+                    : "border-line/50 text-faint hover:text-dim",
+                )}
+                aria-label={`Next story: ${nextConcept.title}`}
+              >
+                <span className="font-mono text-[10px]">{nextConcept.id}</span>
+                <ArrowRight size={12} aria-hidden="true" />
+              </Link>
+            )}
+          </div>
         </div>
         <h1 className="font-serif text-3xl text-ink">{concept.title}</h1>
         <p className="mt-1 text-base text-dim">{concept.short}</p>
@@ -262,7 +302,17 @@ export function ConceptPage({ id }: { id: ConceptId }) {
             fireConfetti();
           }}
           alreadyDone={isDone}
-          nextConcept={nextConcept ? { id: nextConcept.id, title: nextConcept.title } : null}
+          nextConcept={
+            nextConcept
+              ? {
+                  id: nextConcept.id,
+                  title: nextConcept.title,
+                  short: nextConcept.short,
+                  phase: nextConcept.phase,
+                  xp: nextConcept.xp,
+                }
+              : null
+          }
           nextUnlocked={nextUnlocked}
           onGoToNext={() => router.push(`/learn/${nextConcept?.id}`)}
         />
@@ -442,7 +492,13 @@ function TestTab({
   questions: Question[];
   onPass: () => void;
   alreadyDone: boolean;
-  nextConcept: { id: string; title: string } | null;
+  nextConcept: {
+    id: string;
+    title: string;
+    short: string;
+    phase: number;
+    xp: number;
+  } | null;
   nextUnlocked: boolean;
   onGoToNext: () => void;
 }) {
@@ -516,41 +572,81 @@ function TestTab({
         />
 
         {allCorrect && (
-          <div className="mt-4 bg-accent/10 border border-accent/40 rounded-xl p-6 text-center">
-            <Sparkles
-              size={24}
-              className="mx-auto text-accent"
-              aria-hidden="true"
-            />
-            <h3 className="mt-2 font-serif text-xl text-ink">
+          <div
+            className={cn(
+              "mt-6 rounded-2xl p-8 text-center transition",
+              nextUnlocked
+                ? "bg-gradient-to-b from-accent/15 via-accent/10 to-card border border-accent/40 shadow-[0_0_24px_-12px_var(--accent)]"
+                : "bg-accent/10 border border-accent/40",
+            )}
+          >
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-accent/20 border border-accent/40">
+              <Sparkles size={22} className="text-accent" aria-hidden="true" />
+            </div>
+            <h3 className="mt-3 font-serif text-2xl text-ink">
               All correct — locked in
             </h3>
             <p className="text-sm text-dim mt-1">
-              +{questions.reduce((s, qq) => s + qq.xp, 0)} XP earned
+              +{questions.reduce((s, qq) => s + qq.xp, 0)} XP earned across{" "}
+              {questions.length} questions
             </p>
-            <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2">
-              <button
-                onClick={onPass}
-                disabled={alreadyDone}
-                className="px-5 py-2.5 rounded bg-accent text-canvas font-medium disabled:opacity-50"
-              >
-                {alreadyDone ? "Already locked in" : "Mark complete"}
-              </button>
+
+            {nextConcept && (
+              <div className="mt-5 mx-auto max-w-md">
+                <div className="text-[10px] text-faint uppercase tracking-widest mb-1.5">
+                  Next story
+                </div>
+                <div
+                  className="rounded-lg border border-line bg-card/60 px-4 py-3 text-left"
+                  aria-label="Next concept preview"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span
+                      className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                      style={{
+                        background: `${PHASES.find((p) => p.id === nextConcept.phase)?.color ?? "#888"}20`,
+                        color:
+                          PHASES.find((p) => p.id === nextConcept.phase)?.color ??
+                          "#888",
+                      }}
+                    >
+                      {nextConcept.id}
+                    </span>
+                    <span className="text-[10px] text-faint">
+                      +{nextConcept.xp} XP
+                    </span>
+                    {!nextUnlocked && (
+                      <span className="ml-auto text-[10px] text-faint inline-flex items-center gap-1">
+                        <Lock size={10} aria-hidden="true" /> preview only
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm font-medium text-ink">
+                    {nextConcept.title}
+                  </div>
+                  <div className="text-xs text-dim mt-0.5">
+                    {nextConcept.short}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
               {nextConcept &&
                 (alreadyDone ? (
                   <Link
                     href={`/learn/${nextConcept.id}`}
                     className={cn(
-                      "px-5 py-2.5 rounded font-medium inline-flex items-center gap-2 transition",
+                      "px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2 transition text-base",
                       nextUnlocked
-                        ? "bg-ink text-canvas hover:opacity-90"
+                        ? "bg-ink text-canvas hover:opacity-90 shadow-lg"
                         : "border border-line bg-elev/40 text-dim hover:bg-elev",
                     )}
                   >
                     {nextUnlocked
                       ? "Continue to next story"
                       : "Preview next story"}
-                    <ArrowRight size={14} aria-hidden="true" />
+                    <ArrowRight size={16} aria-hidden="true" />
                   </Link>
                 ) : (
                   <button
@@ -558,16 +654,24 @@ function TestTab({
                       onPass();
                       onGoToNext();
                     }}
-                    className="px-5 py-2.5 rounded bg-ink text-canvas font-medium inline-flex items-center gap-2 hover:opacity-90 transition"
+                    className="px-6 py-3 rounded-lg bg-ink text-canvas font-semibold inline-flex items-center gap-2 hover:opacity-90 transition text-base shadow-lg"
                   >
                     Continue to next story
-                    <ArrowRight size={14} aria-hidden="true" />
+                    <ArrowRight size={16} aria-hidden="true" />
                   </button>
                 ))}
+              <button
+                onClick={onPass}
+                disabled={alreadyDone}
+                className="px-4 py-2 rounded text-xs border border-line/50 text-dim hover:bg-elev disabled:opacity-40"
+              >
+                {alreadyDone ? "Already locked in" : "Mark complete only"}
+              </button>
             </div>
-            {nextConcept && (
-              <p className="mt-3 text-[10px] text-faint uppercase tracking-wider">
-                Next · {nextConcept.id} — {nextConcept.title}
+
+            {!nextConcept && (
+              <p className="mt-4 text-xs text-accent font-medium">
+                You finished the entire curriculum. ✦
               </p>
             )}
           </div>

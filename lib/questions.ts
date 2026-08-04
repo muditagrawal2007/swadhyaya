@@ -974,7 +974,7 @@ export const QUESTIONS: Question[] = [
   q("L7", "identify",
     "Which property distinguishes RREF from plain echelon form?",
     [
-      { id: "a", label: "Every pivot is 1" },
+      { id: "a", label: "Every pivot is 1", correct: true },
       { id: "b", label: "Every pivot is 0" },
       { id: "c", label: "There are no zeros below the pivots" },
       { id: "d", label: "The matrix is square" },
