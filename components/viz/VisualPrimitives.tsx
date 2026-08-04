@@ -251,6 +251,64 @@ export function BasisTransform({
                   stroke="#6b6058"
                   strokeWidth={1}
                 />
+                {/* Numeric tick labels */}
+                {[-3, -2, -1, 1, 2, 3].map((t) => {
+                  const p = w2p(t, 0);
+                  const py = w2p(0, t);
+                  return (
+                    <g key={`ax-${t}`}>
+                      {/* X tick */}
+                      <line
+                        x1={p.px}
+                        y1={o.py - 3}
+                        x2={p.px}
+                        y2={o.py + 3}
+                        stroke="#6b6058"
+                        strokeWidth={1}
+                      />
+                      <text
+                        x={p.px}
+                        y={o.py + 16}
+                        fill="#a89e94"
+                        fontSize="9"
+                        textAnchor="middle"
+                        fontFamily="ui-monospace, monospace"
+                      >
+                        {t}
+                      </text>
+                      {/* Y tick */}
+                      <line
+                        x1={o.px - 3}
+                        y1={py.py}
+                        x2={o.px + 3}
+                        y2={py.py}
+                        stroke="#6b6058"
+                        strokeWidth={1}
+                      />
+                      <text
+                        x={o.px - 8}
+                        y={py.py + 3}
+                        fill="#a89e94"
+                        fontSize="9"
+                        textAnchor="end"
+                        fontFamily="ui-monospace, monospace"
+                      >
+                        {t}
+                      </text>
+                    </g>
+                  );
+                })}
+                {/* Origin */}
+                <text
+                  x={o.px - 8}
+                  y={o.py + 16}
+                  fill="#a89e94"
+                  fontSize="9"
+                  textAnchor="end"
+                  fontFamily="ui-monospace, monospace"
+                >
+                  0
+                </text>
               </>
             );
           })()}
@@ -457,6 +515,83 @@ export function SpanParallelogram({
           })}
         </g>
       )}
+
+      {/* Axes with numeric labels */}
+      <g>
+        {/* Vertical */}
+        <line
+          x1={W / 2}
+          y1={4}
+          x2={W / 2}
+          y2={H - 4}
+          stroke="#6b6058"
+          strokeWidth={1}
+        />
+        {/* Horizontal */}
+        <line
+          x1={4}
+          y1={H / 2}
+          x2={W - 4}
+          y2={H / 2}
+          stroke="#6b6058"
+          strokeWidth={1}
+        />
+        {/* Numeric tick labels */}
+        {[-3, -2, -1, 1, 2, 3].map((t) => {
+          const p = w2p(t, 0);
+          const py = w2p(0, t);
+          return (
+            <g key={`ax-${t}`}>
+              <line
+                x1={p.px}
+                y1={H / 2 - 3}
+                x2={p.px}
+                y2={H / 2 + 3}
+                stroke="#6b6058"
+                strokeWidth={1}
+              />
+              <text
+                x={p.px}
+                y={H / 2 + 16}
+                fill="#a89e94"
+                fontSize="9"
+                textAnchor="middle"
+                fontFamily="ui-monospace, monospace"
+              >
+                {t}
+              </text>
+              <line
+                x1={W / 2 - 3}
+                y1={py.py}
+                x2={W / 2 + 3}
+                y2={py.py}
+                stroke="#6b6058"
+                strokeWidth={1}
+              />
+              <text
+                x={W / 2 - 8}
+                y={py.py + 3}
+                fill="#a89e94"
+                fontSize="9"
+                textAnchor="end"
+                fontFamily="ui-monospace, monospace"
+              >
+                {t}
+              </text>
+            </g>
+          );
+        })}
+        <text
+          x={W / 2 - 8}
+          y={H / 2 + 16}
+          fill="#a89e94"
+          fontSize="9"
+          textAnchor="end"
+          fontFamily="ui-monospace, monospace"
+        >
+          0
+        </text>
+      </g>
 
       {/* Filled parallelogram */}
       <polygon
